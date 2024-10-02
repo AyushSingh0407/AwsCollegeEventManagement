@@ -13,10 +13,8 @@ import lombok.NoArgsConstructor;
 @DynamoDBTable(tableName = "DSW")
 public class DSW {
 
-    @DynamoDBHashKey(attributeName = "dswCollegeName")
-    private String dswCollegeName;
 
-    @DynamoDBAttribute(attributeName = "dswCollegeEmail")
+    @DynamoDBHashKey(attributeName = "dswCollegeEmail")
     private String dswCollegeEmail;
 
     @DynamoDBAttribute(attributeName = "dswMobileNo")
