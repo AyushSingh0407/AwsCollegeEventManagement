@@ -5,16 +5,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CalendarIcon, MapPinIcon, UsersIcon, SearchIcon } from "lucide-react"
-// import img from "next/img"
-{/* <a href="https://ibb.co/wN89Bp4"><img src="https://i.ibb.co/MDKYZP7/pepsi-messi-poster.png" alt="pepsi-messi-poster" border="0"></a> */}
+
+
 const allEvents = [
-  { id: 1, title: "Tech Hackathon", date: "June 15", location: "Computer Science Building", attendees: 120, clubId: 1, poster: "https://i.ibb.co/MDKYZP7/pepsi-messi-poster.png?height=150&width=150" },
-  { id: 2, title: "Art Exhibition", date: "June 18", location: "Student Center", attendees: 80, clubId: 2, poster: "assets/poster?height=150&width=150" },
-  { id: 3, title: "Career Fair", date: "June 20", location: "Main Hall", attendees: 200, clubId: null, poster: "./assets/poster?height=150&width=150" },
-  { id: 4, title: "Music Festival", date: "June 25", location: "Auditorium", attendees: 300, clubId: null, poster: "./assets/poster?height=150&width=150" },
-  { id: 5, title: "Science Symposium", date: "June 30", location: "Science Complex", attendees: 150, clubId: 3, poster: "./assets/poster?height=150&width=150" },
-  { id: 6, title: "Coding Competition", date: "July 5", location: "Computer Lab", attendees: 50, clubId: 1, poster: "./assets/poster?height=150&width=150" },
-  { id: 7, title: "Painting Workshop", date: "July 10", location: "Art Studio", attendees: 30, clubId: 2, poster: "./assets/poster?height=150&width=150" },
+    { id: 1, title: "Tech Hackathon", description: "A 24-hour coding challenge for tech enthusiasts", startDate: "2023-06-15", startTime: "09:00", endDate: "2023-06-16", endTime: "09:00", location: "Computer Science Building", attendees: 120, capacity: 150, clubId: 1, poster: "/placeholder.svg?height=150&width=150" },
+    { id: 2, title: "Art Exhibition", description: "Showcase of student artworks from various mediums", startDate: "2023-06-18", startTime: "10:00", endDate: "2023-06-18", endTime: "18:00", location: "Student Center", attendees: 80, capacity: 100, clubId: 2, poster: "/placeholder.svg?height=150&width=150" },
+    { id: 3, title: "Career Fair", description: "Connect with potential employers from various industries", startDate: "2023-06-20", startTime: "09:00", endDate: "2023-06-20", endTime: "17:00", location: "Main Hall", attendees: 200, capacity: 200, clubId: null, poster: "/placeholder.svg?height=150&width=150" },
+    { id: 4, title: "Music Festival", description: "A day-long celebration of music featuring student bands", startDate: "2023-06-25", startTime: "12:00", endDate: "2023-06-25", endTime: "22:00", location: "Auditorium", attendees: 300, capacity: 350, clubId: null, poster: "/placeholder.svg?height=150&width=150" },
+    { id: 5, title: "Science Symposium", description: "Presentations on cutting-edge research by students and faculty", startDate: "2023-06-30", startTime: "10:00", endDate: "2023-06-30", endTime: "16:00", location: "Science Complex", attendees: 150, capacity: 200, clubId: 3, poster: "/placeholder.svg?height=150&width=150" },
 ]
 
 const clubs = [
@@ -24,6 +22,7 @@ const clubs = [
   { id: 4, name: "IEEE Student Chapter", description: "Advancing technology for humanity. Participate in technical projects and networking events.", logo: "/placeholder.svg?height=80&width=80", email: "ieee.chapter@campus.edu", type: "chapter" },
   { id: 5, name: "ACM Student Chapter", description: "Advancing computing as a science and profession. Join us for coding challenges and tech talks.", logo: "/placeholder.svg?height=80&width=80", email: "acm.chapter@campus.edu", type: "chapter" },
 ]
+
 
 export default function Homepage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -72,6 +71,62 @@ export default function Homepage() {
     return description.length > maxLength ? `${description.substring(0, maxLength)}...` : description
   }
 
+  const formatDateTime = (date: string, time: string) => {
+    const dateTime = new Date(`${date}T${time}`)
+    return dateTime.toLocaleString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric'
+    })
+  }
+
+  const EventCard = ({event, isRegistered = false }) => (
+    <Card key={event.id} className="flex flex-col">
+      <CardHeader>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle>{event.title}</CardTitle>
+            <CardDescription>Organized by {getClubName(event.clubId)}</CardDescription>
+          </div>
+          <img src={event.poster} alt={`${event.title} poster`} width={80} height={80} className="rounded-lg" />
+        </div>
+      </CardHeader>
+      <CardContent className="flex-grow">
+        <p className="text-sm text-muted-foreground mb-4">{event.description}</p>
+        <div className="flex items-center mb-2">
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          <span className="text-sm">
+            {formatDateTime(event.startDate, event.startTime)} - 
+            {formatDateTime(event.endDate, event.endTime)}
+          </span>
+        </div>
+        <div className="flex items-center mb-2">
+          <MapPinIcon className="mr-2 h-4 w-4" />
+          <span className="text-sm">{event.location}</span>
+        </div>
+        <div className="flex items-center">
+          <UsersIcon className="mr-2 h-4 w-4" />
+          <span className="text-sm">{event.attendees} / {event.capacity} attendees</span>
+        </div>
+      </CardContent>
+      <CardFooter>
+        {isRegistered ? (
+          <>
+            <Button variant="outline" className="w-1/2 mr-2" onClick={() => handleViewEventDetails(event)}>View</Button>
+            <Button variant="destructive" className="w-1/2" onClick={() => handleDeregister(event)}>De-register</Button>
+          </>
+        ) : (
+          <Button className="w-full" disabled={event.attendees >= event.capacity}>
+            {event.attendees >= event.capacity ? "Event Full" : "Register"}
+          </Button>
+        )}
+      </CardFooter>
+    </Card>
+  )
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
@@ -118,34 +173,7 @@ export default function Homepage() {
               <h3 className="text-2xl font-bold mb-8">Upcoming Events</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {allEvents.slice(0, 3).map((event) => (
-                  <Card key={event.id} className="flex flex-col">
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle>{event.title}</CardTitle>
-                          <CardDescription>Organized by {getClubName(event.clubId)}</CardDescription>
-                        </div>
-                        <img src={event.poster} alt={`${event.title} poster`} className="rounded-lg" width="200" height="200" />
-                      </div>
-                    </CardHeader>
-                    <CardContent className="flex-grow">
-                      <div className="flex items-center mb-2">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        <span>{event.date}</span>
-                      </div>
-                      <div className="flex items-center mb-2">
-                        <MapPinIcon className="mr-2 h-4 w-4" />
-                        <span>{event.location}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <UsersIcon className="mr-2 h-4 w-4" />
-                        <span>{event.attendees} attendees</span>
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button className="w-full">Register</Button>
-                    </CardFooter>
-                  </Card>
+                    <EventCard key={event.id} event={event} />
                 ))}
               </div>
               <div className="mt-8 text-center">
@@ -200,34 +228,7 @@ export default function Homepage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {(selectedClubEvents.length > 0 ? selectedClubEvents : filteredEvents).map((event) => (
-                  <Card key={event.id} className="flex flex-col">
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle>{event.title}</CardTitle>
-                          <CardDescription>Organized by {getClubName(event.clubId)}</CardDescription>
-                        </div>
-                        <img src={event.poster} alt={`${event.title} poster`} className="rounded-lg" width="200" height="200" />
-                      </div>
-                    </CardHeader>
-                    <CardContent className="flex-grow">
-                      <div className="flex items-center mb-2">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        <span>{event.date}</span>
-                      </div>
-                      <div className="flex items-center mb-2">
-                        <MapPinIcon className="mr-2 h-4 w-4" />
-                        <span>{event.location}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <UsersIcon className="mr-2 h-4 w-4" />
-                        <span>{event.attendees} attendees</span>
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button className="w-full">Register</Button>
-                    </CardFooter>
-                  </Card>
+                  <EventCard key={event.id} event={event} />
                 ))}
               </div>
               {selectedClubEvents.length > 0 && (
