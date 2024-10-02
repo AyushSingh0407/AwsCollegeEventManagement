@@ -14,5 +14,5 @@ public class DSW {
     private String dswCollegeName;
     private String dswCollegeEmail;
     private String dswMobileNo;
-    private String dswPass
+    private String dswPassword;
 }
