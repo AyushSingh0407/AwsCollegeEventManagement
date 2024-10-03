@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { AlertCircle, ArrowLeft } from "lucide-react"
 import { Link } from "react-router-dom";
 
-export default function StudentLogin() {
+export default function ClubLogin() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -46,7 +46,7 @@ export default function StudentLogin() {
               Back to Home
             </Link>
           </div>
-          <CardTitle className="text-2xl font-bold">Student Login</CardTitle>
+          <CardTitle className="text-2xl font-bold">Club Login</CardTitle>
           <CardDescription>Enter your details to access your account</CardDescription>
         </CardHeader>
         <CardContent>
@@ -91,7 +91,7 @@ export default function StudentLogin() {
           <Button className="w-full" onClick={handleSubmit}>Login</Button>
           <p className="mt-4 text-sm text-center">
             Don't have an account?{" "}
-            <Link to="/signup" className="text-primary hover:underline">
+            <Link to="/club/signup" className="text-primary hover:underline">
               Sign up
             </Link>
           </p>
