@@ -19,11 +19,11 @@ public class Club {
     @DynamoDBHashKey(attributeName = "clubEmail")
     private String clubEmail;
 
-    @DynamoDBAttribute(attributeName = "clubPhoneNo")
-    private String clubPhoneNo;
-
     @DynamoDBAttribute(attributeName = "clubPassword")
     private String clubPassword;
+
+    @DynamoDBAttribute(attributeName = "clubPhoneNo")
+    private String clubPhoneNo;
 
     @DynamoDBAttribute(attributeName = "clubDescription")
     private String clubDescription;
