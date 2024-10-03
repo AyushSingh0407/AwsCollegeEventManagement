@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.model.ApiResponse;
 import com.example.demo.model.EndUser;
 import com.example.demo.repository.EndUserRepository;
 import com.example.demo.service.EndUserService;
@@ -50,35 +51,44 @@ public class EndUserController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@RequestBody EndUser endUserRequest) {
+    public ResponseEntity<ApiResponse> signup(@RequestBody EndUser endUserRequest) {
         try {
             EndUser newUser = endUserService.signup(
-                    endUserRequest.getEndUserName(), endUserRequest.getEndUserEmail(), endUserRequest.getEndUserPassword()
+                    endUserRequest.getEndUserName(),
+                    endUserRequest.getEndUserEmail(),
+                    endUserRequest.getEndUserPassword()
             );
-            return ResponseEntity.ok("User signed up successfully: " + newUser.getEndUserEmail());
+            ApiResponse response = new ApiResponse("User signed up successfully", 200, newUser);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            ApiResponse errorResponse = new ApiResponse(e.getMessage(), 400, null);
+            return ResponseEntity.badRequest().body(errorResponse);
         }
     }
 
+
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody EndUser endUserRequest) {
+    public ResponseEntity<ApiResponse> login(@RequestBody EndUser endUserRequest) {
         try {
             boolean isLoggedIn = endUserService.login(
                     endUserRequest.getEndUserEmail(), endUserRequest.getEndUserPassword()
             );
 
             if (isLoggedIn) {
-                // Generate JWT token containing user email and roles
+                // Generate JWT token containing user email
                 String token = jwtService.generateToken(endUserRequest.getEndUserEmail());
-                return ResponseEntity.ok("Bearer " + token);
+                ApiResponse response = new ApiResponse("Login successful", 200, "Bearer " + token);
+                return ResponseEntity.ok(response);
             } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login failed!");
+                ApiResponse errorResponse = new ApiResponse("Login failed!", 401, null);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
             }
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            ApiResponse errorResponse = new ApiResponse(e.getMessage(), 400, null);
+            return ResponseEntity.badRequest().body(errorResponse);
         }
     }
+
 
     @GetMapping("/dashboard")
     public ResponseEntity<Map<String, Object>> getDashboard(@RequestHeader("Authorization") String token) {
@@ -86,17 +96,17 @@ public class EndUserController {
             // Remove "Bearer " prefix from the token
             token = token.substring(7);
 
-            // Extract user email from the token
+
             String userEmail = jwtService.extractUsername(token);
 
-            // Fetch user details from the database
+
             EndUser user = endUserRepository.findByEndUserEmail(userEmail);
 
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
             }
 
-            // Prepare user-specific details for the dashboard
+
             Map<String, Object> userDetails = new HashMap<>();
             userDetails.put("username", user.getEndUserName());
             userDetails.put("email", user.getEndUserEmail());

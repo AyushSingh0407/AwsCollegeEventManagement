@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.model.ApiResponse;
 import com.example.demo.model.DSW;
 import com.example.demo.model.EndUser;
 import com.example.demo.model.Event;
@@ -62,19 +63,22 @@ public class DSWController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@RequestBody DSW dswRequest) {
+    public ResponseEntity<ApiResponse> signup(@RequestBody DSW dswRequest) {
         try {
             DSW dsw = dswService.signup(
                     dswRequest.getDswMobileNo(), dswRequest.getDswCollegeEmail(), dswRequest.getDswPassword()
             );
-            return ResponseEntity.ok("DSW signed up successfully: " + dsw.getDswCollegeEmail());
+            ApiResponse response = new ApiResponse("DSW signed up successfully", 200, dsw);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            ApiResponse errorResponse = new ApiResponse(e.getMessage(), 400, null);
+            return ResponseEntity.badRequest().body(errorResponse);
         }
     }
 
+
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody DSW dswRequest) {
+    public ResponseEntity<ApiResponse> login(@RequestBody DSW dswRequest) {
         try {
             boolean isLoggedIn = dswService.login(
                     dswRequest.getDswCollegeEmail(), dswRequest.getDswPassword()
@@ -83,13 +87,17 @@ public class DSWController {
             if (isLoggedIn) {
                 // Generate JWT token containing user email and roles
                 String token = jwtService.generateToken(dswRequest.getDswCollegeEmail());
-                return ResponseEntity.ok("Bearer " + token);
+                ApiResponse response = new ApiResponse("Login successful", 200, "Bearer " + token);
+                return ResponseEntity.ok(response);
             } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login failed!");
+                ApiResponse errorResponse = new ApiResponse("Login failed!", 401, null);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
             }
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            ApiResponse errorResponse = new ApiResponse(e.getMessage(), 400, null);
+            return ResponseEntity.badRequest().body(errorResponse);
         }
     }
+
 
 }

@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.model.ApiResponse;
 import com.example.demo.model.Club;
 import com.example.demo.model.EndUser;
 import com.example.demo.model.Event;
@@ -60,35 +61,44 @@ public class ClubController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@RequestBody Club clubRequest) {
+    public ResponseEntity<ApiResponse> signup(@RequestBody Club clubRequest) {
         try {
             Club newUser = clubService.signup(
-                    clubRequest.getClubName(), clubRequest.getClubEmail(), clubRequest.getClubPassword(), clubRequest.getClubPhoneNo(), clubRequest.getClubDescription()
+                    clubRequest.getClubName(),
+                    clubRequest.getClubEmail(),
+                    clubRequest.getClubPassword(),
+                    clubRequest.getClubPhoneNo(),
+                    clubRequest.getClubDescription()
             );
-            return ResponseEntity.ok("Club signed up successfully: " + newUser.getClubEmail());
+            ApiResponse response = new ApiResponse("Club signed up successfully", 200, newUser);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            ApiResponse errorResponse = new ApiResponse(e.getMessage(), 400, null);
+            return ResponseEntity.badRequest().body(errorResponse);
         }
     }
+
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody Club clubRequest) {
+    public ResponseEntity<ApiResponse> login(@RequestBody Club clubRequest) {
         try {
-            boolean isLoggedIn = clubService.login(
-                    clubRequest.getClubEmail(), clubRequest.getClubPassword()
-            );
+            boolean isLoggedIn = clubService.login(clubRequest.getClubEmail(), clubRequest.getClubPassword());
 
             if (isLoggedIn) {
-                // Generate JWT token containing user email and roles
+                // Generate JWT token containing user email
                 String token = jwtService.generateToken(clubRequest.getClubEmail());
-                return ResponseEntity.ok("Bearer " + token);
+                ApiResponse response = new ApiResponse("Login successful", 200, "Bearer " + token);
+                return ResponseEntity.ok(response);
             } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login failed!");
+                ApiResponse errorResponse = new ApiResponse("Login failed!", 401, null);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
             }
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            ApiResponse errorResponse = new ApiResponse(e.getMessage(), 400, null);
+            return ResponseEntity.badRequest().body(errorResponse);
         }
     }
+
 
     @GetMapping("/dashboard/{clubEmail}")
     public List<Event> getEventsByClub(@PathVariable String clubEmail) {

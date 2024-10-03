@@ -14,7 +14,7 @@ public class ClubService {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
-    public Club signup(String clubName, String clubEmail, String rawPassword, String clubPhoneNo, String clubString) {
+    public Club signup(String clubName, String clubEmail, String rawPassword, String clubPhoneNo, String clubDescription) {
         if (clubRepository.findByClubEmail(clubEmail) != null) {
             throw new RuntimeException("Email already exists!");
         }
@@ -24,6 +24,8 @@ public class ClubService {
         club.setClubName(clubName);
         club.setClubEmail(clubEmail);
         club.setClubPassword(encodedPassword);
+        club.setClubPhoneNo(clubPhoneNo);
+        club.setClubDescription(clubDescription);
 
         return clubRepository.save(club);
     }
