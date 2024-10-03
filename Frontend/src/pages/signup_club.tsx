@@ -7,10 +7,12 @@ import { Label } from "@/components/ui/label"
 import { AlertCircle, ArrowLeft } from "lucide-react"
 import { Link } from "react-router-dom";
 
-export default function StudentSignup() {
+export default function ClubSignup() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
   const [password, setPassword] = useState("")
+  const [description, setDescription] = useState("")
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
 
   const validateForm = () => {
@@ -18,8 +20,10 @@ export default function StudentSignup() {
     if (!name.trim()) newErrors.name = "Name is required"
     if (!email.trim()) newErrors.email = "Email is required"
     else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = "Email is invalid"
+    if (!phone.trim()) newErrors.phone = "Phone is required"
     if (!password) newErrors.password = "Password is required"
     else if (password.length < 6) newErrors.password = "Password must be at least 6 characters"
+    if (!description.trim()) newErrors.description = "Description is required"
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -29,13 +33,15 @@ export default function StudentSignup() {
   
     if (validateForm()) {
       const input = {
-        endUserName: name,
-        endUserEmail: email,
-        endUserPassword: password
+        clubName: name,
+        clubEmail: email,
+        clubPhone: phone,
+        clubPassword: password,
+        clubDescription: description
       };
   
       try {
-        const response = await fetch("http://localhost:8080/enduser/signup", {
+        const response = await fetch("http://localhost:8080/club/signup", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -57,7 +63,7 @@ export default function StudentSignup() {
         setEmail("");
         setPassword("");
         setErrors({});
-      } catch (error) {
+      } catch (error:any) {
         console.error("Signup failed:", error.message || error);
       }
     }
@@ -74,7 +80,7 @@ export default function StudentSignup() {
               Back to Home
             </Link>
           </div>
-          <CardTitle className="text-2xl font-bold">Student Signup</CardTitle>
+          <CardTitle className="text-2xl font-bold">Club Signup</CardTitle>
           <CardDescription>Enter your details to create your account</CardDescription>
         </CardHeader>
         <CardContent>
@@ -114,6 +120,23 @@ export default function StudentSignup() {
               )}
             </div>
             <div className="space-y-2">
+              <Label htmlFor="phone">Phone</Label>
+              <Input
+                id="phone"
+                type="phone"
+                placeholder=""
+                value={email}
+                onChange={(e) => setPhone(e.target.value)}
+                className={errors.phone ? "border-red-500" : ""}
+              />
+              {errors.phone && (
+                <p className="text-red-500 text-sm flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-1" />
+                  {errors.phone}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
@@ -129,13 +152,30 @@ export default function StudentSignup() {
                 </p>
               )}
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="desription">Description</Label>
+              <Input
+                id="description"
+                type="description"
+                placeholder="everything about your club"
+                value={email}
+                onChange={(e) => setDescription(e.target.value)}
+                className={errors.description ? "border-red-500" : ""}
+              />
+              {errors.description && (
+                <p className="text-red-500 text-sm flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-1" />
+                  {errors.description}
+                </p>
+              )}
+            </div>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col">
           <Button className="w-full" onClick={handleSubmit}>Signup</Button>
           <p className="mt-4 text-sm text-center">
             Already have an account?{" "}
-            <Link to="/login" className="text-primary hover:underline">
+            <Link to="/club/login" className="text-primary hover:underline">
               Login
             </Link>
           </p>
