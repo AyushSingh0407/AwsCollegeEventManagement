@@ -58,10 +58,10 @@ public class EndUserController {
                     endUserRequest.getEndUserEmail(),
                     endUserRequest.getEndUserPassword()
             );
-            ApiResponse response = new ApiResponse("User signed up successfully", 200, newUser);
+            ApiResponse response = new ApiResponse("User signed up successfully", 200, true, newUser);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            ApiResponse errorResponse = new ApiResponse(e.getMessage(), 400, null);
+            ApiResponse errorResponse = new ApiResponse(e.getMessage(), 400, false, null);
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
@@ -77,14 +77,14 @@ public class EndUserController {
             if (isLoggedIn) {
                 // Generate JWT token containing user email
                 String token = jwtService.generateToken(endUserRequest.getEndUserEmail());
-                ApiResponse response = new ApiResponse("Login successful", 200, "Bearer " + token);
+                ApiResponse response = new ApiResponse("Login successful", 200, true, "Bearer " + token);
                 return ResponseEntity.ok(response);
             } else {
-                ApiResponse errorResponse = new ApiResponse("Login failed!", 401, null);
+                ApiResponse errorResponse = new ApiResponse("Login failed!", 401, false, null);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
             }
         } catch (Exception e) {
-            ApiResponse errorResponse = new ApiResponse(e.getMessage(), 400, null);
+            ApiResponse errorResponse = new ApiResponse(e.getMessage(), 400, false, null);
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
