@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CalendarIcon, MapPinIcon, UsersIcon, SearchIcon } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 
 
 const allEvents = [
@@ -25,7 +25,18 @@ const clubs = [
 ]
 
 
-export default function Homepage() {
+interface LoginState {
+  isLogin: boolean;
+  token: string;
+}
+
+interface Props {
+  loginState: LoginState;
+  setLogin: React.Dispatch<React.SetStateAction<LoginState>>;
+}
+
+
+export default function Homepage({ loginState, setLogin }: Props) {
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState("home")
   const [filteredEvents, setFilteredEvents] = useState(allEvents)
@@ -82,6 +93,30 @@ export default function Homepage() {
       hour: 'numeric',
       minute: 'numeric'
     })
+  }
+
+  const handleSignOut = async () => {
+
+    if (loginState.isLogin) {
+      const sure = confirm("Do you really want to log out ?")
+      if (sure) {
+        console.log("Maine token delete ker diya")
+        const response = await fetch("http://localhost:8080/enduser/signout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": loginState.token
+          }
+        })
+        const data = await response.text()
+        console.log(data)
+        console.log(loginState)
+
+        console.log("Maine token delete ker diya")
+        setLogin({isLogin: false, token: ""})
+      }
+    }
+
   }
 
   const EventCard = ({event, isRegistered = false }) => (
@@ -141,8 +176,8 @@ export default function Homepage() {
               <li><Button variant="link" onClick={() => setActiveTab("clubs")}>Clubs</Button></li>
             </ul>
           </nav>
-          <Button>
-            <Link to="/enduser/login">Sign in</Link>
+          <Button onClick={handleSignOut}>
+            <Link to={loginState.isLogin ? "/" : "/enduser/login"}>{loginState.isLogin ? "Sign out" : "sign in"}</Link>
           </Button>
         </div>
       </header>
