@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CalendarIcon, MapPinIcon, UsersIcon, SearchIcon } from "lucide-react"
+import { Link } from "react-router-dom"
 
 
 const allEvents = [
@@ -140,7 +141,9 @@ export default function Homepage() {
               <li><Button variant="link" onClick={() => setActiveTab("clubs")}>Clubs</Button></li>
             </ul>
           </nav>
-          <Button>Sign In</Button>
+          <Button>
+            <Link to="/enduser/login">Sign in</Link>
+          </Button>
         </div>
       </header>
 
