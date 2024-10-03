@@ -16,7 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Bell, Calendar as CalendarIcon, ChevronDown, FileText, LogOut, Search, User, AlertTriangle } from "lucide-react"
+import { Bell, Calendar as CalendarIcon, ChevronDown, FileText, LogOut, Search, User, AlertTriangle, Upload } from "lucide-react"
 import { format } from "date-fns"
 
 export default function ClubDashboard() {
@@ -41,6 +41,26 @@ export default function ClubDashboard() {
   const [showProfileDialog, setShowProfileDialog] = useState(false)
   const [showRegistrationList, setShowRegistrationList] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+
+  const [showLogoUploadDialog, setShowLogoUploadDialog] = useState(false)
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
+      setLogoFile(file)
+      setLogoPreview(URL.createObjectURL(file))
+    }
+  }
+
+  const handleLogoUpload = () => {
+    // Here you would typically send the logo file to your server
+    // For this example, we'll just close the dialog and keep the preview
+    setShowLogoUploadDialog(false)
+    // You might want to update the club's logo in your state or send it to an API here
+  }
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -437,6 +457,72 @@ export default function ClubDashboard() {
               ))}
             </TableBody>
           </Table>
+        </DialogContent>
+      </Dialog>
+      {/* Profile Dialog */}
+      <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Profile</DialogTitle>
+            <DialogDescription>View and edit your profile information</DialogDescription>
+          </DialogHeader>
+          <form className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input id="name" defaultValue="John Doe" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" defaultValue="john@example.com" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="currentPassword">Current Password</Label>
+              <Input id="currentPassword" type="password" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">New Password</Label>
+              <Input id="newPassword" type="password" />
+            </div>
+            <Button type="button" onClick={() => setShowLogoUploadDialog(true)}>
+              Upload Club Logo
+            </Button>
+          </form>
+          <DialogFooter>
+            <Button type="submit">Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Logo Upload Dialog */}
+      <Dialog open={showLogoUploadDialog} onOpenChange={setShowLogoUploadDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload Club Logo</DialogTitle>
+            <DialogDescription>Choose a new logo for your club</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center justify-center">
+              {logoPreview ? (
+                <img src={logoPreview} alt="Logo Preview" className="w-32 h-32 object-cover rounded-full" />
+              ) : (
+                <div className="w-32 h-32 bg-gray-200 rounded-full flex items-center justify-center">
+                  <Upload className="w-12 h-12 text-gray-400" />
+                </div>
+              )}
+            </div>
+            <Input
+              id="logo-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleLogoChange}
+            />
+          </div>
+          <DialogFooter>
+            <Button type="button" onClick={() => setShowLogoUploadDialog(false)}>Cancel</Button>
+            <Button type="button" onClick={handleLogoUpload} disabled={!logoFile}>
+              Upload Logo
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
