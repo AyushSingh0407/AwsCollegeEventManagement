@@ -12,7 +12,7 @@ public class S3Service {
     @Autowired
     private AmazonS3 amazonS3;
 
-    private final String bucketName = "your-s3-bucket-name";
+    private final String bucketName = "awsclublogo";
 
     public String uploadFile(MultipartFile file) throws Exception {
         String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();

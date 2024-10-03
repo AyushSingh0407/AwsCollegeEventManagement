@@ -37,8 +37,7 @@ public class EndUserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authorization header is missing or invalid.");
         }
 
-        // Extract token from the "Bearer" prefix
-        String token = authorizationHeader.substring(7); // Remove "Bearer " prefix
+        String token = authorizationHeader.substring(7);
 
         // Validate the token
         if (!jwtService.validateToken(token, jwtService.extractUsername(token))) {

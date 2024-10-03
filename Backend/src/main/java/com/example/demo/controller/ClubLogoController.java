@@ -1,14 +1,14 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.ImageUploadResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import com.example.demo.service.S3Service;
 import com.example.demo.service.DynamoDBService;
+import com.example.demo.service.JwtService;
 
 public class ClubLogoController {
     @Autowired
@@ -17,23 +17,23 @@ public class ClubLogoController {
     @Autowired
     private DynamoDBService dynamoDBService;
 
+    @Autowired
+    private JwtService jwtService;
+
     @PostMapping("/uploadImage")
-    public ResponseEntity<ImageUploadResponse> uploadImage(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<String> uploadImage(
+            @RequestParam("file") MultipartFile file,
+            @RequestHeader("Authorization") String authHeader) {
+
         try {
-
+            String token = authHeader.replace("Bearer ", "");
+            String clubEmail = jwtService.extractEmail(token);
             String imageUrl = s3Service.uploadFile(file);
+            dynamoDBService.updateClubImageURL(clubEmail, imageUrl, file.getOriginalFilename());
+            return ResponseEntity.ok("Image uploaded successfully. URL: " + imageUrl);
 
-            dynamoDBService.saveImageMetadata(imageUrl, file.getOriginalFilename(), System.currentTimeMillis());
-
-            ImageUploadResponse response = new ImageUploadResponse(
-                    "Image uploaded successfully", imageUrl, System.currentTimeMillis()
-            );
-            return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
-            ImageUploadResponse errorResponse = new ImageUploadResponse(
-                    "Image upload failed: " + e.getMessage(), null, System.currentTimeMillis()
-            );
-            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(500).body("Image upload failed: " + e.getMessage());
         }
     }
 }

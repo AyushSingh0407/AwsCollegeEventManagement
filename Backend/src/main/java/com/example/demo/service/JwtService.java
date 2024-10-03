@@ -18,6 +18,13 @@ public class JwtService {
 
     private String SECRET_KEY = "ayushSinghSecretKeyVelloreInstituteOfTechnologyVelloreTamilNaduIndia";
 
+    public String extractEmail(String token) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(SECRET_KEY)
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.getSubject();
+    }
 
     // Generate Token
     public String generateToken(String userEmail) {

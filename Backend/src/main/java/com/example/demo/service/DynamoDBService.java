@@ -1,9 +1,7 @@
 package com.example.demo.service;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import com.example.demo.model.Club;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,18 +9,16 @@ import org.springframework.stereotype.Service;
 public class DynamoDBService {
 
     @Autowired
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDBMapper dynamoDBMapper;
 
-    public void saveImageMetadata(String imageUrl, String imageName, long uploadTime) {
-        DynamoDB dynamoDB = new DynamoDB(amazonDynamoDB);
-        Table table = dynamoDB.getTable("ImageMetadata");
+    public void updateClubImageURL(String clubEmail, String imageUrl, String fileName) {
+        Club club = dynamoDBMapper.load(Club.class, clubEmail);
 
-        Item item = new Item()
-                .withPrimaryKey("ImageId", System.currentTimeMillis())
-                .withString("ImageUrl", imageUrl)
-                .withString("ImageName", imageName)
-                .withLong("UploadTime", uploadTime);
-
-        table.putItem(item);
+        if (club != null) {
+            club.setClubLogo(imageUrl);
+            dynamoDBMapper.save(club);
+        } else {
+            throw new RuntimeException("Club not found");
+        }
     }
 }
