@@ -236,9 +236,9 @@ export default function Homepage({ loginState, setLogin }: Props) {
                 <div className="w-full md:w-1/3 md:text-right">
                   <h5 className="text-lg font-semibold mb-4">Quick Links</h5>
                   <ul className="space-y-2">
-                    <li><a href="#" className="hover:underline">Contact</a></li>
-                    <li><a href="#" className="hover:underline">Privacy Policy</a></li>
-                    <li><a href="#" className="hover:underline">Terms of Service</a></li>
+                    <li><Link to="#" className="hover:underline">Contact</Link></li>
+                    <li><Link to="/club/login">Club Sign in</Link></li>
+                    <li><Link to="/admin/login" className="hover:underline">Admin Sign in</Link></li>
                   </ul>
                 </div>
               </div>

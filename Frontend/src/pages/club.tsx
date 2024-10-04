@@ -18,8 +18,20 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Bell, Calendar as CalendarIcon, ChevronDown, FileText, LogOut, Search, User, AlertTriangle, Upload } from "lucide-react"
 import { format } from "date-fns"
+import { useNavigate } from "react-router-dom"
 
-export default function ClubDashboard() {
+interface LoginState {
+  isLogin: boolean;
+  token: string;
+}
+
+interface Props {
+  loginState: LoginState;
+  setLogin: React.Dispatch<React.SetStateAction<LoginState>>;
+}
+
+export default function ClubDashboard({ loginState, setLogin }: Props) {
+  const navigate = useNavigate()
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
   const [allEvents, setAllEvents] = useState([
@@ -46,6 +58,33 @@ export default function ClubDashboard() {
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
 
+  const handleLogOut = async () => {
+
+    if (loginState.isLogin) {
+      const sure = confirm("Do you really want to log out ?")
+      if (sure) {
+        console.log("Maine token delete ker diya")
+        const response = await fetch("http://localhost:8080/enduser/signout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": loginState.token
+          }
+        })
+        const data = await response.text()
+        console.log(data)
+        console.log(loginState)
+        navigate("/")
+
+        console.log("Maine token delete ker diya")
+        setLogin({ isLogin: false, token: "" })
+      }
+    } else {
+      navigate("/")
+    }
+
+  }
+
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
@@ -54,12 +93,12 @@ export default function ClubDashboard() {
     }
   }
 
-  const handleLogoUpload = () => {
-    // Here you would typically send the logo file to your server
-    // For this example, we'll just close the dialog and keep the preview
-    setShowLogoUploadDialog(false)
-    // You might want to update the club's logo in your state or send it to an API here
-  }
+  // const handleLogoUpload = () => {
+  //   // Here you would typically send the logo file to your server
+  //   // For this example, we'll just close the dialog and keep the preview
+  //   setShowLogoUploadDialog(false)
+  //   // You might want to update the club's logo in your state or send it to an API here
+  // }
 
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -86,6 +125,8 @@ export default function ClubDashboard() {
     }
   }
 
+  
+
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value.toLowerCase()
     setSearchQuery(query)
@@ -105,6 +146,37 @@ export default function ClubDashboard() {
     { name: "Jane Smith", email: "jane@example.com" },
     { name: "Alice Johnson", email: "alice@example.com" },
   ]
+
+  const handleLogoUpload = async () => {
+    setShowLogoUploadDialog(false)
+    if (!logoFile) return
+  
+    const formData = new FormData()
+    formData.append('file', logoFile)
+
+    console.log(formData)
+  
+    // Make the request to upload the logo to the backend
+    const response = await fetch('http://localhost:8080/club/uploadImage', {
+      method: 'POST',
+      headers: {
+        'Authorization': loginState.token
+      },
+      body: formData
+    })
+  
+    const result = await response.text()
+    if (response.ok) {
+      console.log("Logo uploaded successfully:", result)
+      setShowLogoUploadDialog(false)
+    } else {
+      console.error("Logo upload failed:", result)
+    }
+  }
+  
+  const handleProfileUpdate = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -170,7 +242,7 @@ export default function ClubDashboard() {
                   </div>
                 </div>
                 <div className="mt-4 border-t pt-4">
-                  <Button variant="ghost" className="w-full justify-start">
+                  <Button onClick={handleLogOut} variant="ghost" className="w-full justify-start">
                     <LogOut className="mr-2 h-4 w-4" />
                     Log out
                   </Button>
@@ -466,7 +538,7 @@ export default function ClubDashboard() {
             <DialogTitle>Profile</DialogTitle>
             <DialogDescription>View and edit your profile information</DialogDescription>
           </DialogHeader>
-          <form className="space-y-4">
+          <form onSubmit={handleProfileUpdate} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
               <Input id="name" defaultValue="John Doe" />

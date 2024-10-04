@@ -5,12 +5,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AlertCircle, ArrowLeft } from "lucide-react"
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function AdminSignup() {
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
   const [password, setPassword] = useState("")
+  const navigate = useNavigate()
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
 
   const validateForm = () => {
@@ -29,13 +30,13 @@ export default function AdminSignup() {
   
     if (validateForm()) {
       const input = {
-        adminEmail: email,
-        adminPhone: phone,
-        adminPassword: password
+        dswCollegeEmail: email,
+        dswMobileNo: phone,
+        dswPassword: password
       };
   
       try {
-        const response = await fetch("http://localhost:8080/admin/signup", {
+        const response = await fetch("http://localhost:8080/dsw/signup", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -43,13 +44,13 @@ export default function AdminSignup() {
           body: JSON.stringify(input),
         });
   
-        // Check if the response status is OK (status code 200-299)
         if (!response.ok) {
           throw new Error(`Server error: ${response.status}`);
         }
-  
+
+        navigate("/admin/login")
         // Attempt to parse the response
-        const responseData = await response.text();
+        const responseData = await response.json();
         console.log("Signup successful:", responseData);
         
         // Reset form after successful submission

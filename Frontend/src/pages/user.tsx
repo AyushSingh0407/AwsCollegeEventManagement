@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { CalendarIcon, MapPinIcon, UsersIcon, SearchIcon, User, LogOut, Clock } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useNavigate } from "react-router-dom"
 // import img from "next/image"
 
 const allEvents = [
@@ -30,7 +31,17 @@ const clubs = [
   { id: 3, name: "Science Club", description: "Explore the wonders of science", logo: "/placeholder.svg?height=80&width=80", email: "science.club@campus.edu", type: "club" },
 ]
 
-export default function UserPage() {
+interface LoginState {
+  isLogin: boolean;
+  token: string;
+}
+
+interface Props {
+  loginState: LoginState;
+  setLogin: React.Dispatch<React.SetStateAction<LoginState>>;
+}
+
+export default function UserPage({ loginState, setLogin }: Props) {
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState("home")
   const [filteredEvents, setFilteredEvents] = useState(allEvents)
@@ -39,6 +50,7 @@ export default function UserPage() {
   const [filteredClubs, setFilteredClubs] = useState(clubs)
   const [selectedClubEvents, setSelectedClubEvents] = useState([])
   const [showProfileDialog, setShowProfileDialog] = useState(false)
+  const navigate = useNavigate()
   const [showEventDetailsDialog, setShowEventDetailsDialog] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [showDeregisterDialog, setShowDeregisterDialog] = useState(false)
@@ -48,6 +60,41 @@ export default function UserPage() {
     email: "john.doe@example.com",
     password: "********"
   })
+
+  useEffect (() => {
+    if (!loginState.isLogin) {
+      navigate("/")
+    }
+  })
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/dashboard", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": loginState.token
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch user data");
+        }
+
+        const userInfo = await response.json();
+        setProfileDetails({
+          name: userInfo.name,
+          email: userInfo.email,
+          password: userInfo.password
+        });
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserData();
+  }, [loginState.token])
 
   useEffect(() => {
     const filtered = allEvents.filter(event =>
@@ -62,7 +109,7 @@ export default function UserPage() {
     const filtered = clubs.filter(club =>
       (clubType === "all" || club.type === clubType) &&
       (club.name.toLowerCase().includes(clubSearchTerm.toLowerCase()) ||
-       club.description.toLowerCase().includes(clubSearchTerm.toLowerCase()))
+        club.description.toLowerCase().includes(clubSearchTerm.toLowerCase()))
     )
     setFilteredClubs(filtered)
   }, [clubSearchTerm, clubType])
@@ -108,14 +155,41 @@ export default function UserPage() {
 
   const formatDateTime = (date: string, time: string) => {
     const dateTime = new Date(`${date}T${time}`)
-    return dateTime.toLocaleString('en-US', { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric', 
+    return dateTime.toLocaleString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
       year: 'numeric',
       hour: 'numeric',
       minute: 'numeric'
     })
+  }
+
+  const handleLogOut = async () => {
+
+    if (loginState.isLogin) {
+      const sure = confirm("Do you really want to log out ?")
+      if (sure) {
+        console.log("Maine token delete ker diya")
+        const response = await fetch("http://localhost:8080/enduser/signout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": loginState.token
+          }
+        })
+        const data = await response.text()
+        console.log(data)
+        console.log(loginState)
+        navigate("/")
+
+        console.log("Maine token delete ker diya")
+        setLogin({ isLogin: false, token: "" })
+      }
+    } else {
+      navigate("/")
+    }
+
   }
 
   const EventCard = ({ event, isRegistered = false }) => (
@@ -134,7 +208,7 @@ export default function UserPage() {
         <div className="flex items-center mb-2">
           <CalendarIcon className="mr-2 h-4 w-4" />
           <span className="text-sm">
-            {formatDateTime(event.startDate, event.startTime)} - 
+            {formatDateTime(event.startDate, event.startTime)} -
             {formatDateTime(event.endDate, event.endTime)}
           </span>
         </div>
@@ -204,7 +278,7 @@ export default function UserPage() {
                 </div>
               </div>
               <div className="mt-4 border-t pt-4">
-                <Button variant="ghost" className="w-full justify-start">
+                <Button onClick={handleLogOut} variant="ghost" className="w-full justify-start">
                   <LogOut className="mr-2 h-4 w-4" />
                   Log out
                 </Button>
@@ -223,10 +297,10 @@ export default function UserPage() {
               <p className="text-xl mb-8">Discover and join exciting events happening around your college</p>
               <form onSubmit={handleSearch} className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0">
                 <div className="relative w-full max-w-md">
-                  <Input 
-                    type="text" 
-                    placeholder="Search events..." 
-                    className="pl-10 pr-4 py-2 w-full" 
+                  <Input
+                    type="text"
+                    placeholder="Search events..."
+                    className="pl-10 pr-4 py-2 w-full"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -261,9 +335,9 @@ export default function UserPage() {
                   {selectedClubEvents.length > 0 ? "Club Events" : "All Events"}
                 </h3>
                 <div className="flex items-center">
-                  <Input 
-                    type="text" 
-                    placeholder="Search events..." 
+                  <Input
+                    type="text"
+                    placeholder="Search events..."
                     className="max-w-xs mr-2"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -312,9 +386,9 @@ export default function UserPage() {
             <div className="container mx-auto px-4">
               <h3 className="text-2xl font-bold mb-8">Campus Clubs</h3>
               <div className="mb-8 flex flex-col sm:flex-row gap-4">
-                <Input 
-                  type="text" 
-                  placeholder="Search clubs..." 
+                <Input
+                  type="text"
+                  placeholder="Search clubs..."
                   className="max-w-md"
                   value={clubSearchTerm}
                   onChange={(e) => setClubSearchTerm(e.target.value)}
@@ -367,7 +441,7 @@ export default function UserPage() {
                 <Input
                   id="name"
                   value={profileDetails.name}
-                  onChange={(e) => setProfileDetails({...profileDetails, name: e.target.value})}
+                  onChange={(e) => setProfileDetails({ ...profileDetails, name: e.target.value })}
                   className="col-span-3"
                 />
               </div>
@@ -379,7 +453,7 @@ export default function UserPage() {
                   id="email"
                   type="email"
                   value={profileDetails.email}
-                  onChange={(e) => setProfileDetails({...profileDetails, email: e.target.value})}
+                  onChange={(e) => setProfileDetails({ ...profileDetails, email: e.target.value })}
                   className="col-span-3"
                 />
               </div>
@@ -391,7 +465,7 @@ export default function UserPage() {
                   id="password"
                   type="password"
                   value={profileDetails.password}
-                  onChange={(e) => setProfileDetails({...profileDetails, password: e.target.value})}
+                  onChange={(e) => setProfileDetails({ ...profileDetails, password: e.target.value })}
                   className="col-span-3"
                 />
               </div>

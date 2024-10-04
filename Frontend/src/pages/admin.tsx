@@ -17,10 +17,22 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { Bell, Search, User, LogOut, AlertTriangle, Check, X, Eye, Calendar as CalendarIcon } from "lucide-react"
 import { format, isSameDay } from "date-fns"
+import { useNavigate } from "react-router-dom"
 
 // /<a href="https://ibb.co/MSMvj6H"><img src="https://i.ibb.co/YQpCKZS/Arduino-Instagram-post.png" alt="Arduino-Instagram-post" border="0"></a>
+interface LoginState {
+  isLogin: boolean;
+  token: string;
+}
 
-export default function CollegeAdminDashboard() {
+interface Props {
+  loginState: LoginState;
+  setLogin: React.Dispatch<React.SetStateAction<LoginState>>;
+}
+
+export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
+  const navigate = useNavigate()
+
   const [approvedEvents, setApprovedEvents] = useState([
     { id: 1, title: "Tech Hackathon", startDate: "2023-06-15", startTime: "09:00", endDate: "2023-06-16", endTime: "09:00", venue: "CS Building", organizer: "CS Department", registrations: 75, capacity: 100, description: "A 24-hour coding competition for students." },
     { id: 2, title: "Career Fair", startDate: "2023-06-20", startTime: "10:00", endDate: "2023-06-20", endTime: "16:00", venue: "Main Hall", organizer: "Career Services", registrations: 150, capacity: 200, description: "Annual job fair with top employers." },
@@ -72,6 +84,33 @@ export default function CollegeAdminDashboard() {
     )
     setFilteredPendingEvents(filtered)
   }, [pendingSearchTerm, pendingEvents])
+
+  const handleLogOut = async () => {
+
+    if (loginState.isLogin) {
+      const sure = confirm("Do you really want to log out ?")
+      if (sure) {
+        console.log("Maine token delete ker diya")
+        const response = await fetch("http://localhost:8080/enduser/signout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": loginState.token
+          }
+        })
+        const data = await response.text()
+        console.log(data)
+        console.log(loginState)
+        navigate("/")
+
+        console.log("Maine token delete ker diya")
+        setLogin({ isLogin: false, token: "" })
+      }
+    } else {
+      navigate("/")
+    }
+
+  }
 
   const handleCancelEvent = (event: any) => {
     setSelectedEvent(event)
@@ -183,7 +222,7 @@ export default function CollegeAdminDashboard() {
                   </div>
                 </div>
                 <div className="mt-4 border-t pt-4">
-                  <Button variant="ghost" className="w-full justify-start">
+                  <Button onClick={handleLogOut} variant="ghost" className="w-full justify-start">
                     <LogOut className="mr-2 h-4 w-4" />
                     Log out
                   </Button>

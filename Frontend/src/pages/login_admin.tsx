@@ -5,12 +5,24 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AlertCircle, ArrowLeft } from "lucide-react"
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-export default function AdminLogin() {
+
+interface LoginState {
+  isLogin: boolean;
+  token: string;
+}
+
+interface Props {
+  loginState: LoginState;
+  setLogin: React.Dispatch<React.SetStateAction<LoginState>>;
+}
+
+export default function AdminLogin({ loginState, setLogin }: Props) {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const navigate = useNavigate()
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
 
   const validateForm = () => {
@@ -23,10 +35,37 @@ export default function AdminLogin() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (validateForm()) {
-      // Here you would typically send the data to your backend
+      
+      const adminInfo = {
+        dswCollegeEmail: email,
+        dswPassword: password
+      }
+      
+      const response = await fetch("http://localhost:8080/dsw/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(adminInfo)
+      })
+
+      const result = await response.json()
+      console.log(result)
+      console.log(result.success)
+      // console.log(props.isLogin)
+      if (result.success) {
+        setLogin(prevState => ({
+          isLogin: result.success,
+          token: result.data,
+        }))
+        navigate("/admin");
+      } else {
+        alert("Login not successfull")
+      }
+
       console.log("Form submitted", { name, email, password })
       // Reset form after successful submission
       setName("")
