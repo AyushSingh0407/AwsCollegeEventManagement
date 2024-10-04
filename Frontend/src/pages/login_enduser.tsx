@@ -61,7 +61,7 @@ export default function StudentLogin({ loginState, setLogin }: Props) {
           isLogin: result.success,
           token: result.data,
         }))
-        navigate("/");
+        navigate("/user");
       } else {
         alert("Login not successfull")
       }

@@ -43,13 +43,12 @@ export default function StudentSignup() {
           body: JSON.stringify(input),
         });
   
-        // Check if the response status is OK (status code 200-299)
         if (!response.ok) {
           throw new Error(`Server error: ${response.status}`);
         }
   
         // Attempt to parse the response
-        const responseData = await response.text();
+        const responseData = await response.json();
         console.log("Signup successful:", responseData);
         
         // Reset form after successful submission

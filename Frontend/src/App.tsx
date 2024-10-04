@@ -1,5 +1,5 @@
 // App.tsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
 import CollegeAdminDashboard from "./pages/admin";
 import Homepage from './pages/home';
@@ -36,7 +36,7 @@ function App() {
     },
     {
       path: "/club/login",
-      element: <ClubLogin />,
+      element: <ClubLogin loginState={loginState} setLogin={setLogin} />,
     },
     {
       path: "/club/signup",
@@ -44,7 +44,7 @@ function App() {
     },
     {
       path: "/admin/login",
-      element: <AdminLogin />,
+      element: <AdminLogin loginState={loginState} setLogin={setLogin} />,
     },
     {
       path: "/admin/signup",
@@ -52,15 +52,15 @@ function App() {
     },
     {
       path: "/clubs",
-      element: <ClubDashboard />,
+      element: <ClubDashboard loginState={loginState} setLogin={setLogin} />,
     },
     {
       path: "/user",
-      element: <UserPage />,
+      element: <UserPage loginState={loginState} setLogin={setLogin} />,
     },
     {
       path: "/admin",
-      element: <CollegeAdminDashboard />,
+      element: <CollegeAdminDashboard loginState={loginState} setLogin={setLogin} />,
     }
   ]);
 

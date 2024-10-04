@@ -125,7 +125,7 @@ export default function ClubSignup() {
                 id="phone"
                 type="phone"
                 placeholder=""
-                value={email}
+                value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className={errors.phone ? "border-red-500" : ""}
               />
@@ -158,7 +158,7 @@ export default function ClubSignup() {
                 id="description"
                 type="description"
                 placeholder="everything about your club"
-                value={email}
+                value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className={errors.description ? "border-red-500" : ""}
               />
