@@ -58,7 +58,7 @@ public class EventService {
             newEvent.setCapacity(capacity);
             newEvent.setPosterUrl(posterUrl);
             newEvent.setClubEmail(clubEmail);
-            existingEvent.setApproved(approved);
+            newEvent.setApproved(approved);
 
             return eventRepository.save(newEvent);
         }

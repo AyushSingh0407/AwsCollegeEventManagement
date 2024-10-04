@@ -59,13 +59,43 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
   const [profileDetails, setProfileDetails] = useState({
     name: "Admin User",
     email: "admin@college.edu",
-    oldPassword: "",
-    newPassword: ""
   })
   const [approvedSearchTerm, setApprovedSearchTerm] = useState("")
   const [pendingSearchTerm, setPendingSearchTerm] = useState("")
   const [filteredApprovedEvents, setFilteredApprovedEvents] = useState(approvedEvents)
   const [filteredPendingEvents, setFilteredPendingEvents] = useState(pendingEvents)
+
+  useEffect(() => {
+    if (loginState.isLogin) {
+      fetchData()
+    } else {
+      navigate("/")
+    }
+  }, [showProfileDialog])
+
+  const fetchData = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/dsw/dashboard", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": loginState.token
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch user data");
+      }
+
+      const userInfo = await response.json();
+      setProfileDetails({
+        name: userInfo.name,
+        email: userInfo.email,
+      });
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  }
 
   useEffect(() => {
     const filtered = approvedEvents.filter(event =>

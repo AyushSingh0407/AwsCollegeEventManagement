@@ -56,8 +56,8 @@ export default function UserPage({ loginState, setLogin }: Props) {
   const [showDeregisterDialog, setShowDeregisterDialog] = useState(false)
 
   const [profileDetails, setProfileDetails] = useState({
-    name: "John Doe",
-    email: "john.doe@example.com",
+    name: "Divyanshu Bharadwaj",
+    email: "Dibu@gmail.com",
     password: "********"
   })
 
@@ -65,13 +65,13 @@ export default function UserPage({ loginState, setLogin }: Props) {
     if (!loginState.isLogin) {
       navigate("/")
     }
-  })
+  }, [showProfileDialog])
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch("http://localhost:8080/dashboard", {
-          method: "POST",
+        const response = await fetch("http://localhost:8080/enduser/dashboard", {
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
             "Authorization": loginState.token
@@ -91,10 +91,10 @@ export default function UserPage({ loginState, setLogin }: Props) {
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
-    };
+    }
 
     fetchUserData();
-  }, [loginState.token])
+  }, [showProfileDialog])
 
   useEffect(() => {
     const filtered = allEvents.filter(event =>
@@ -192,6 +192,10 @@ export default function UserPage({ loginState, setLogin }: Props) {
 
   }
 
+  const getAbbr = () => {
+    return profileDetails.name[0] || "Data nahi aaya abhi tak"
+  }
+
   const EventCard = ({ event, isRegistered = false }) => (
     <Card key={event.id} className="flex flex-col">
       <CardHeader>
@@ -252,9 +256,9 @@ export default function UserPage({ loginState, setLogin }: Props) {
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
+                <Avatar className="h-8 w-f8">
                   <AvatarImage src="/avatars/01.png" alt="@johndoe" />
-                  <AvatarFallback>JD</AvatarFallback>
+                  <AvatarFallback>{getAbbr()}</AvatarFallback>
                 </Avatar>
               </Button>
             </PopoverTrigger>
@@ -263,7 +267,7 @@ export default function UserPage({ loginState, setLogin }: Props) {
                 <div className="flex items-center gap-4">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src="/avatars/01.png" alt="@johndoe" />
-                    <AvatarFallback>JD</AvatarFallback>
+                    <AvatarFallback>{getAbbr()}</AvatarFallback>
                   </Avatar>
                   <div>
                     <p className="text-sm font-medium">{profileDetails.name}</p>

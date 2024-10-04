@@ -32,8 +32,8 @@ interface Props {
 
 export default function ClubDashboard({ loginState, setLogin }: Props) {
   const navigate = useNavigate()
-  const [startDate, setStartDate] = useState<Date>()
-  const [endDate, setEndDate] = useState<Date>()
+  // const [startDate, setStartDate] = useState<Date>()
+  // const [endDate, setEndDate] = useState<Date>()
   const [allEvents, setAllEvents] = useState([
     { id: 1, title: "Tech Hackathon", startDate: "2023-06-15", startTime: "09:00", endDate: "2023-06-16", endTime: "09:00", venue: "CS Building", capacity: 100, registrations: 75, status: "Approved", banner: "/placeholder.svg", description: "Join us for an exciting 24-hour hackathon!" },
     { id: 2, title: "Art Exhibition", startDate: "2023-06-18", startTime: "14:00", endDate: "2023-06-18", endTime: "20:00", venue: "Student Center", capacity: 50, registrations: 30, status: "Pending", banner: "/placeholder.svg", description: "Showcase your artistic talents at our annual exhibition." },
@@ -64,6 +64,19 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
     clubPhoneNo: "",
     clubDescription: "",
   })
+
+  // New Event
+
+  const [eventId, setEventId] = useState("");
+  const [eventTitle, setEventTitle] = useState("");
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [startTime, setStartTime] = useState("");
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [endTime, setEndTime] = useState("");
+  const [venue, setVenue] = useState("");
+  const [capacity, setCapacity] = useState("");
+  const [description, setDescription] = useState("");
+  const [attachments, setAttachments] = useState<File[]>([]);
 
 
   useEffect(() => {
@@ -145,10 +158,60 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
   // }
 
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Handle form submission
-  }
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      setAttachments(Array.from(event.target.files));
+    }
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+  
+    // Ensure we have at least one attachment
+    if (attachments.length === 0) {
+      alert("Please select a poster image");
+      return;
+    }
+  
+    const formData = new FormData();
+    formData.append("eventId", eventId);
+    formData.append("eventName", eventTitle);
+    formData.append("eventStartDate", startDate ? startDate.toISOString().split('T')[0] : "");
+    formData.append("eventStartTime", startTime.toString());
+    formData.append("eventEndDate", endDate ? endDate.toISOString().split('T')[0] : "");
+    formData.append("eventEndTime", endTime.toString());
+    formData.append("venue", venue);
+    formData.append("capacity", capacity.toString());
+    formData.append("eventDescription", description);
+    formData.append("approved", "pending");
+    
+    // Only append the first attachment
+    formData.append("posterImg", attachments[0]);
+  
+    try {
+      const response = await fetch("http://localhost:8080/club/event/create", {
+        method: "POST",
+        headers: {
+          Authorization: loginState.token
+        },
+        body: formData,
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to submit the form");
+      }
+  
+      const data = await response.json();
+      console.log("Form submitted successfully:", data);
+      // Handle success (e.g., show success message, redirect)
+      
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      // Handle error (e.g., show error message to user)
+    }
+  };
+
 
   const handleViewEvent = (event: any) => {
     setSelectedEvent(event)
@@ -262,7 +325,7 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
               <PopoverTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={profileDetails.image} alt={profileDetails.clubName}  />
+                    <AvatarImage src={profileDetails.image} alt={profileDetails.clubName} />
                     <AvatarFallback>{profileDetails.clubName}</AvatarFallback>
                   </Avatar>
                 </Button>
@@ -395,8 +458,22 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
+                    <Label htmlFor="id">Event Title</Label>
+                    <Input
+                      id="id"
+                      value={eventId}
+                      onChange={(e) => setEventId(e.target.value)}
+                      placeholder="Enter event ID"
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="title">Event Title</Label>
-                    <Input id="title" placeholder="Enter event title" />
+                    <Input
+                      id="title"
+                      value={eventTitle}
+                      onChange={(e) => setEventTitle(e.target.value)}
+                      placeholder="Enter event title"
+                    />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -412,18 +489,18 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={startDate}
-                            onSelect={setStartDate}
-                            initialFocus
-                          />
+                          <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus />
                         </PopoverContent>
                       </Popover>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="startTime">Start Time</Label>
-                      <Input id="startTime" type="time" />
+                      <Input
+                        id="startTime"
+                        type="time"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                      />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -433,48 +510,62 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
                         <PopoverTrigger asChild>
                           <Button
                             variant={"outline"}
-                            className={`w-full justify-start text-left font-normal ${!endDate && "text-m uted-foreground"}`}
+                            className={`w-full justify-start text-left font-normal ${!endDate && "text-muted-foreground"}`}
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {endDate ? format(endDate, "PPP") : <span>Pick an end date</span>}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={endDate}
-                            onSelect={setEndDate}
-                            initialFocus
-                          />
+                          <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus />
                         </PopoverContent>
                       </Popover>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="endTime">End Time</Label>
-                      <Input id="endTime" type="time" />
+                      <Input
+                        id="endTime"
+                        type="time"
+                        value={endTime}
+                        onChange={(e) => setEndTime(e.target.value)}
+                      />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="venue">Venue</Label>
-                    <Input id="venue" placeholder="Enter event venue" />
+                    <Input
+                      id="venue"
+                      value={venue}
+                      onChange={(e) => setVenue(e.target.value)}
+                      placeholder="Enter event venue"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="capacity">Capacity</Label>
-                    <Input id="capacity" type="number" placeholder="Enter event capacity" />
+                    <Input
+                      id="capacity"
+                      type="number"
+                      value={capacity}
+                      onChange={(e) => setCapacity(e.target.value)}
+                      placeholder="Enter event capacity"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="description">Description</Label>
-                    <Textarea id="description" placeholder="Enter event description" />
+                    <Textarea
+                      id="description"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Enter event description"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="attachments">Attachments</Label>
-                    <Input id="attachments" type="file" multiple />
+                    <Input id="attachments" type="file" multiple onChange={handleFileChange} />
                   </div>
+                  <Button type="submit">Submit</Button>
                 </form>
               </CardContent>
-              <CardFooter>
-                <Button type="submit">Submit Event Request</Button>
-              </CardFooter>
             </Card>
           </TabsContent>
         </Tabs>

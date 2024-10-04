@@ -5,9 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AlertCircle, ArrowLeft } from "lucide-react"
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom"
-import { constructNow } from "date-fns"
+import { Link, useNavigate } from "react-router-dom"
 
 interface LoginState {
   isLogin: boolean;
@@ -63,7 +61,8 @@ export default function StudentLogin({ loginState, setLogin }: Props) {
         }))
         navigate("/user");
       } else {
-        alert("Login not successfull")
+        alert(result.message)
+        return
       }
 
       
