@@ -13,11 +13,8 @@ import com.example.demo.service.DynamoDBService;
 import com.example.demo.service.JwtService;
 
 
-<<<<<<< HEAD
 @RestController
 @RequestMapping("/club")
-=======
->>>>>>> f3731de0bd6b8e64d1707d59c2862f26cf76cad1
 public class ClubLogoController {
     @Autowired
     private S3Service s3Service;

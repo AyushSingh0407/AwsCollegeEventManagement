@@ -19,7 +19,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/dsw")
-@CrossOrigin(origins = "http://localhost:5173")
 public class DSWController {
 
     @Autowired
