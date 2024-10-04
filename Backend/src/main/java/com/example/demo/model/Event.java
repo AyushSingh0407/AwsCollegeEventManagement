@@ -23,16 +23,16 @@ public class Event {
     private String eventDescription;
 
     @DynamoDBAttribute(attributeName = "eventStartDate")
-    private Date eventStartDate;
+    private String eventStartDate;
 
     @DynamoDBAttribute(attributeName = "eventStartTime")
-    private Date eventStartTime;
+    private String eventStartTime;
 
     @DynamoDBAttribute(attributeName = "eventEndDate")
-    private Date eventEndDate;
+    private String eventEndDate;
 
     @DynamoDBAttribute(attributeName = "eventEndTime")
-    private Date eventEndTime;
+    private String eventEndTime;
 
     @DynamoDBAttribute(attributeName = "venue")
     private String venue;
