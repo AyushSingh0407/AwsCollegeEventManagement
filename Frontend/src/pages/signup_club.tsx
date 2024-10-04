@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AlertCircle, ArrowLeft } from "lucide-react"
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function ClubSignup() {
   const [name, setName] = useState("")
@@ -13,6 +13,7 @@ export default function ClubSignup() {
   const [phone, setPhone] = useState("")
   const [password, setPassword] = useState("")
   const [description, setDescription] = useState("")
+  const navigate = useNavigate()
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
 
   const validateForm = () => {
@@ -35,7 +36,7 @@ export default function ClubSignup() {
       const input = {
         clubName: name,
         clubEmail: email,
-        clubPhone: phone,
+        clubPhoneNo: phone,
         clubPassword: password,
         clubDescription: description
       };
@@ -49,14 +50,20 @@ export default function ClubSignup() {
           body: JSON.stringify(input),
         });
   
+        
+        const responseData = await response.json();
+        console.log(responseData)
         // Check if the response status is OK (status code 200-299)
         if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
+          throw new Error(`${responseData.message}`);
         }
+
+
   
         // Attempt to parse the response
-        const responseData = await response.text();
+        // const responseData = await response.text();
         console.log("Signup successful:", responseData);
+        navigate("/club/login")
         
         // Reset form after successful submission
         setName("");
@@ -64,7 +71,7 @@ export default function ClubSignup() {
         setPassword("");
         setErrors({});
       } catch (error:any) {
-        console.error("Signup failed:", error.message || error);
+        alert(error)
       }
     }
   };

@@ -94,7 +94,7 @@ public class ClubController {
             } else {
                 ApiResponse errorResponse = new ApiResponse("Login failed!", 401, false, null);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-            }
+            }   
         } catch (Exception e) {
             ApiResponse errorResponse = new ApiResponse(e.getMessage(), 400, false, null);
             return ResponseEntity.badRequest().body(errorResponse);

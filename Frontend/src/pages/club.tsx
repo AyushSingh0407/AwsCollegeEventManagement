@@ -57,6 +57,50 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
   const [showLogoUploadDialog, setShowLogoUploadDialog] = useState(false)
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const [profileDetails, setProfileDetails] = useState({
+    clubName: "",
+    clubEmail: "",
+    image: "",
+    clubPhoneNo: "",
+    clubDescription: "",
+  })
+
+
+  useEffect(() => {
+    fetchUserData()
+  }, [showProfileDialog]);
+
+  const fetchUserData = async () => {
+    try {
+      console.log()
+      const response = await fetch("http://localhost:8080/club/dashboard", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": loginState.token
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch user data");
+      }
+
+      const clubInfo = await response.json();
+      // console.log(clubInfo.data)
+
+      setProfileDetails({
+        clubName: clubInfo.data.clubName,
+        clubEmail: clubInfo.data.clubEmail,
+        image: clubInfo.data.clubLogo,
+        clubPhoneNo: clubInfo.data.clubPhoneNo,
+        clubDescription: clubInfo.data.clubDescription
+      });
+
+      console.log(profileDetails)
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  }
 
   const handleLogOut = async () => {
 
@@ -106,11 +150,11 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
     // Handle form submission
   }
 
-  const handleViewEvent = (event:any) => {
+  const handleViewEvent = (event: any) => {
     setSelectedEvent(event)
   }
 
-  const handleCancelEvent = (event:any) => {
+  const handleCancelEvent = (event: any) => {
     setSelectedEvent(event)
     setShowCancelDialog(true)
   }
@@ -125,7 +169,7 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
     }
   }
 
-  
+
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value.toLowerCase()
@@ -133,7 +177,7 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
     if (query === "") {
       setEvents(allEvents)
     } else {
-      const filteredEvents = allEvents.filter(event => 
+      const filteredEvents = allEvents.filter(event =>
         event.title.toLowerCase().includes(query) ||
         event.venue.toLowerCase().includes(query)
       )
@@ -150,12 +194,12 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
   const handleLogoUpload = async () => {
     setShowLogoUploadDialog(false)
     if (!logoFile) return
-  
+
     const formData = new FormData()
     formData.append('file', logoFile)
 
     console.log(formData)
-  
+
     // Make the request to upload the logo to the backend
     const response = await fetch('http://localhost:8080/club/uploadImage', {
       method: 'POST',
@@ -164,8 +208,9 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
       },
       body: formData
     })
-  
+
     const result = await response.text()
+    console.log(result)
     if (response.ok) {
       console.log("Logo uploaded successfully:", result)
       setShowLogoUploadDialog(false)
@@ -173,7 +218,7 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
       console.error("Logo upload failed:", result)
     }
   }
-  
+
   const handleProfileUpdate = (e: React.ChangeEvent<HTMLInputElement>) => {
 
   }
@@ -217,8 +262,8 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
               <PopoverTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/avatars/01.png" alt="@shadcn" />
-                    <AvatarFallback>SC</AvatarFallback>
+                    <AvatarImage src={profileDetails.image} alt={profileDetails.clubName}  />
+                    <AvatarFallback>{profileDetails.clubName}</AvatarFallback>
                   </Avatar>
                 </Button>
               </PopoverTrigger>
@@ -226,12 +271,12 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
                 <div className="grid gap-4">
                   <div className="flex items-center gap-4">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src="/avatars/01.png" alt="@shadcn" />
+                      <AvatarImage src={profileDetails.image} alt={profileDetails.clubName} />
                       <AvatarFallback>SC</AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-medium">shadcn</p>
-                      <p className="text-xs text-muted-foreground">m@example.com</p>
+                      <p className="text-sm font-medium">{profileDetails.clubName}</p>
+                      <p className="text-xs text-muted-foreground">{profileDetails.clubEmail}</p>
                     </div>
                   </div>
                   <div className="grid gap-2">
@@ -539,29 +584,10 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
             <DialogDescription>View and edit your profile information</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleProfileUpdate} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" defaultValue="John Doe" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" defaultValue="john@example.com" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="currentPassword">Current Password</Label>
-              <Input id="currentPassword" type="password" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="newPassword">New Password</Label>
-              <Input id="newPassword" type="password" />
-            </div>
             <Button type="button" onClick={() => setShowLogoUploadDialog(true)}>
               Upload Club Logo
             </Button>
           </form>
-          <DialogFooter>
-            <Button type="submit">Save Changes</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -575,7 +601,7 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
           <div className="space-y-4">
             <div className="flex items-center justify-center">
               {logoPreview ? (
-                <img src={logoPreview} alt="Logo Preview" className="w-32 h-32 object-cover rounded-full" />
+                <img src={profileDetails.image} alt="Logo Preview" className="w-32 h-32 object-cover rounded-full" />
               ) : (
                 <div className="w-32 h-32 bg-gray-200 rounded-full flex items-center justify-center">
                   <Upload className="w-12 h-12 text-gray-400" />
