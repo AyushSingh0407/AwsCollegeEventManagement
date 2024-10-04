@@ -44,7 +44,7 @@ public class Event {
     private String posterUrl;
 
     @DynamoDBAttribute(attributeName = "approved")
-    private boolean approved;
+    private String approved;
 
     @DynamoDBAttribute(attributeName = "clubEmail")
     private String clubEmail;

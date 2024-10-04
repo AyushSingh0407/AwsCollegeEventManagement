@@ -26,7 +26,7 @@ public class EventService {
     public Event entry(String eventId, String eventName, String eventDescription,
                        Date eventStartDate, Date eventStartTime, Date eventEndDate,
                        Date eventEndTime, String venue, int capacity,
-                       String posterUrl, String clubEmail, boolean approved) throws Exception {
+                       String posterUrl, String clubEmail, String approved) throws Exception {
 
         Event existingEvent = eventRepository.findEventByEventId(eventId);
 

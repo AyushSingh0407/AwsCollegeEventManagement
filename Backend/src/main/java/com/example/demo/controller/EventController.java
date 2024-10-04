@@ -40,7 +40,7 @@ public class EventController {
             @RequestParam("venue") String venue,
             @RequestParam("capacity") int capacity,
             @RequestParam("posterImg") MultipartFile posterImg,
-            @RequestParam("approved") boolean approved){
+            @RequestParam("approved") String approved){
 
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
