@@ -103,20 +103,24 @@ public class DSWController {
     }
 
     @PostMapping("/pendingevent")
-    public ResponseEntity<String> approveEvent(@RequestBody Event eventRequest) {
+    public ResponseEntity<String> approveEvent(@RequestBody String eventId) {
         try {
-            Event event = eventRepository.findEventByEventId(eventRequest.getEventId());
+            // Fetch the event by eventId
+            Event event = eventRepository.findEventByEventId(eventId);
 
+            // Check if the event exists
             if (event == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Event not found.");
             }
 
+            // Check if the event is already approved
             if ("approved".equals(event.getApproved())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Event is already approved.");
             }
 
+            // Update the approved status to "approved"
             event.setApproved("approved");
-            eventRepository.save(event);
+            eventRepository.save(event); // Save the updated event
 
             return ResponseEntity.ok("Event approved successfully.");
         } catch (Exception e) {
