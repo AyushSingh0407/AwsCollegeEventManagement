@@ -87,19 +87,20 @@ public class ClubController {
             );
 
             if (isLoggedIn) {
-                String clubName = clubService.getClubNameByEmail(clubRequest.getClubName());
+                String clubName = clubService.getClubNameByEmail(clubRequest.getClubEmail());
                 String token = jwtService.generateToken(clubRequest.getClubEmail(), clubName);
                 ApiResponse response = new ApiResponse("Login successful", 200, true, "Bearer " + token);
                 return ResponseEntity.ok(response);
             } else {
-                ApiResponse errorResponse = new ApiResponse("Login failed!", 401, true, null);
+                ApiResponse errorResponse = new ApiResponse("Login failed!", 401, false, null);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
             }
         } catch (Exception e) {
-            ApiResponse errorResponse = new ApiResponse(e.getMessage(), 400, true, null);
+            ApiResponse errorResponse = new ApiResponse(e.getMessage(), 400, false, null);
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
+
 
 
     @GetMapping("/dashboard")
