@@ -35,7 +35,7 @@ public class JwtService {
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
                 .setClaims(claims)
-                .setSubject(subject) // Subject is typically the user email or ID
+                .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 hours validity
                 .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
@@ -49,8 +49,7 @@ public class JwtService {
         return (username.equals(userEmail) && !isTokenExpired(token) && !tokenBlacklistService.isTokenBlacklisted(token));
     }
 
-
-    // Extract username (email) from token
+    
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
