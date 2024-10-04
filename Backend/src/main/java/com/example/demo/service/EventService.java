@@ -19,10 +19,6 @@ public class EventService {
     @Autowired
     private S3Service s3Service;
 
-    public List<Event> getAllEvents() {
-        return eventRepository.findAllEvents();
-    }
-
     public Event entry(String eventId, String eventName, String eventDescription,
                        String eventStartDate, String eventStartTime, String eventEndDate,
                        String eventEndTime, String venue, int capacity,

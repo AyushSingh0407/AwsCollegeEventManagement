@@ -116,7 +116,7 @@ public class DSWController {
             }
 
             event.setApproved("approved");
-            eventRepository.save(event); 
+            eventRepository.save(event);
 
             return ResponseEntity.ok("Event approved successfully.");
         } catch (Exception e) {

@@ -19,23 +19,8 @@ public class ClubRepository {
     }
 
     public Club findByClubEmail(String clubEmail){
+
         return dynamoDBMapper.load(Club.class, clubEmail);
-    }
-
-    public String delete(String clubEmail){
-        Club club = dynamoDBMapper.load(Club.class, clubEmail);
-        dynamoDBMapper.delete(club);
-        return "Club Deleted";
-    }
-
-    public String update(String clubEmail, Club club){
-        dynamoDBMapper.save(club,
-                new DynamoDBSaveExpression()
-                        .withExpectedEntry("clubEmail",
-                                new ExpectedAttributeValue(
-                                        new AttributeValue().withS(clubEmail)
-                                )));
-        return clubEmail;
     }
 
 }

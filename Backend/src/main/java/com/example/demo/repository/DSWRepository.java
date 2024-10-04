@@ -21,13 +21,4 @@ public class DSWRepository {
     public DSW findByDswCollegeEmail(String dswEmail){
         return dynamoDBMapper.load(DSW.class, dswEmail);
     }
-    public String update(String dswEmail, DSW dsw){
-        dynamoDBMapper.save(dsw,
-                new DynamoDBSaveExpression()
-                        .withExpectedEntry("dswEmail",
-                                new ExpectedAttributeValue(
-                                        new AttributeValue().withS(dswEmail)
-                                )));
-        return dswEmail;
-    }
 }
