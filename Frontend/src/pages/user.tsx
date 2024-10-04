@@ -67,34 +67,34 @@ export default function UserPage({ loginState, setLogin }: Props) {
     }
   }, [showProfileDialog])
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await fetch("http://localhost:8080/enduser/dashboard", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": loginState.token
-          }
-        });
+    // useEffect(() => {
+    //   const fetchUserData = async () => {
+    //     try {
+    //       const response = await fetch("http://localhost:8080/enduser/dashboard", {
+    //         method: "GET",
+    //         headers: {
+    //           "Content-Type": "application/json",
+    //           "Authorization": loginState.token
+    //         }
+    //       });
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch user data");
-        }
+    //       if (!response.ok) {
+    //         throw new Error("Failed to fetch user data");
+    //       }
 
-        const userInfo = await response.json();
-        setProfileDetails({
-          name: userInfo.name,
-          email: userInfo.email,
-          password: userInfo.password
-        });
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    }
+    //       const userInfo = await response.json();
+    //       setProfileDetails({
+    //         name: userInfo.name,
+    //         email: userInfo.email,
+    //         password: userInfo.password
+    //       });
+    //     } catch (error) {
+    //       console.error("Error fetching user data:", error);
+    //     }
+    //   }
 
-    fetchUserData();
-  }, [showProfileDialog])
+    //   fetchUserData();
+    // }, [showProfileDialog])
 
   useEffect(() => {
     const filtered = allEvents.filter(event =>
@@ -193,7 +193,7 @@ export default function UserPage({ loginState, setLogin }: Props) {
   }
 
   const getAbbr = () => {
-    return profileDetails.name[0] || "Data nahi aaya abhi tak"
+    return profileDetails.name || "Data nahi aaya abhi tak"
   }
 
   const EventCard = ({ event, isRegistered = false }) => (
@@ -258,7 +258,7 @@ export default function UserPage({ loginState, setLogin }: Props) {
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-f8">
                   <AvatarImage src="/avatars/01.png" alt="@johndoe" />
-                  <AvatarFallback>{getAbbr()}</AvatarFallback>
+                  <AvatarFallback>{profileDetails.name[0]}</AvatarFallback>
                 </Avatar>
               </Button>
             </PopoverTrigger>
@@ -267,7 +267,7 @@ export default function UserPage({ loginState, setLogin }: Props) {
                 <div className="flex items-center gap-4">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src="/avatars/01.png" alt="@johndoe" />
-                    <AvatarFallback>{getAbbr()}</AvatarFallback>
+                    <AvatarFallback>{profileDetails.name[0]}</AvatarFallback>
                   </Avatar>
                   <div>
                     <p className="text-sm font-medium">{profileDetails.name}</p>
@@ -517,7 +517,7 @@ export default function UserPage({ loginState, setLogin }: Props) {
               <Label className="text-right">Organizer:</Label>
               <span className="col-span-3">{getClubName(selectedEvent?.clubId)}</span>
             </div>
-          </div>
+          </div> 
           <DialogFooter>
             <Button onClick={() => setShowEventDetailsDialog(false)}>Close</Button>
           </DialogFooter>

@@ -116,7 +116,6 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
   }
 
   const handleLogOut = async () => {
-
     if (loginState.isLogin) {
       const sure = confirm("Do you really want to log out ?")
       if (sure) {
@@ -278,7 +277,8 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
       console.log("Logo uploaded successfully:", result)
       setShowLogoUploadDialog(false)
     } else {
-      console.error("Logo upload failed:", result)
+      const errorData = await response.json();
+      console.log(errorData.message || "Failed to submit the form");
     }
   }
 

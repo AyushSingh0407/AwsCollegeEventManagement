@@ -105,6 +105,7 @@ public class DSWController {
     @PostMapping("/pendingevent")
     public ResponseEntity<String> approveEvent(@RequestBody String eventId) {
         try {
+            System.out.println(eventId);
             // Fetch the event by eventId
             Event event = eventRepository.findEventByEventId(eventId);
 
