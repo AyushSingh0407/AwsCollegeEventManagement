@@ -64,4 +64,8 @@ public class EventService {
         }
     }
 
+    public List<Event> getPendingApprovalEvents() {
+        return eventRepository.findPendingApprovalEvents();
+    }
+
 }

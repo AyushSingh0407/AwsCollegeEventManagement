@@ -18,10 +18,12 @@ public class EventRepository {
     private DynamoDBMapper dynamoDBMapper;
 
     public List<Event> findAllEvents() {
+
         return dynamoDBMapper.scan(Event.class, new DynamoDBScanExpression());
     }
 
     public Event findEventByEventId(String eventId) {
+
         return dynamoDBMapper.load(Event.class, eventId);
     }
 
@@ -32,6 +34,17 @@ public class EventRepository {
 
         DynamoDBScanExpression scanExpression = new DynamoDBScanExpression()
                 .withFilterExpression("clubEmail = :clubEmail")
+                .withExpressionAttributeValues(expressionAttributeValues);
+
+        return dynamoDBMapper.scan(Event.class, scanExpression);
+    }
+
+    public List<Event> findPendingApprovalEvents() {
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        expressionAttributeValues.put(":approved", new AttributeValue().withS("pending"));
+
+        DynamoDBScanExpression scanExpression = new DynamoDBScanExpression()
+                .withFilterExpression("approved = :approved")
                 .withExpressionAttributeValues(expressionAttributeValues);
 
         return dynamoDBMapper.scan(Event.class, scanExpression);

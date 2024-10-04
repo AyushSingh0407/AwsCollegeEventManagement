@@ -98,5 +98,15 @@ public class DSWController {
         }
     }
 
+    @GetMapping("/pendingevent")
+    public ResponseEntity<List<Event>> getPendingApprovalEvents() {
+        List<Event> pendingEvents = eventService.getPendingApprovalEvents();
+
+        if (pendingEvents.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(pendingEvents);
+        }
+        return ResponseEntity.ok(pendingEvents);
+    }
+
 
 }
