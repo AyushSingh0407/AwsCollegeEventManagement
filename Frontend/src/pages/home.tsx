@@ -44,6 +44,19 @@ export default function Homepage({ loginState, setLogin }: Props) {
   const [clubType, setClubType] = useState("all")
   const [filteredClubs, setFilteredClubs] = useState(clubs)
   const [selectedClubEvents, setSelectedClubEvents] = useState([])
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (loginState.isLogin) {
+      fetchData()
+    } else {
+      navigate("/")
+    }
+  }, [])
+
+  const fetchData = () => {
+
+  }
 
   useEffect(() => {
     const filtered = allEvents.filter(event =>
