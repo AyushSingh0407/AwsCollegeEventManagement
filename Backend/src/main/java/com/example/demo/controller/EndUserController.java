@@ -2,8 +2,10 @@ package com.example.demo.controller;
 
 import com.example.demo.model.ApiResponse;
 import com.example.demo.model.EndUser;
+import com.example.demo.model.Event;
 import com.example.demo.repository.EndUserRepository;
 import com.example.demo.service.EndUserService;
+import com.example.demo.service.EventService;
 import com.example.demo.service.JwtService;
 import com.example.demo.service.TokenBlacklistService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -21,6 +24,9 @@ public class EndUserController {
 
     @Autowired
     private EndUserService endUserService;
+
+    @Autowired
+    private EventService eventService;
 
     @Autowired
     private JwtService jwtService;
@@ -92,12 +98,9 @@ public class EndUserController {
     @GetMapping("/dashboard")
     public ResponseEntity<Map<String, Object>> getDashboard(@RequestHeader("Authorization") String token) {
         try {
-            // Remove "Bearer " prefix from the token
             token = token.substring(7);
 
-
             String userEmail = jwtService.extractUsername(token);
-
 
             EndUser user = endUserRepository.findByEndUserEmail(userEmail);
 
@@ -105,12 +108,12 @@ public class EndUserController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
             }
 
+            List<Event> approvedEvents = eventService.getApprovedEvents();
 
             Map<String, Object> userDetails = new HashMap<>();
             userDetails.put("username", user.getEndUserName());
             userDetails.put("email", user.getEndUserEmail());
-
-
+            userDetails.put("approvedEvents", approvedEvents);
 
             return ResponseEntity.ok(userDetails);
 
@@ -118,5 +121,7 @@ public class EndUserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
     }
+
+
 
 }
