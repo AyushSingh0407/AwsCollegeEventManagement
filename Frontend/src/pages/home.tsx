@@ -194,7 +194,7 @@ export default function Homepage({ loginState, setLogin }: Props) {
                   <Input 
                     type="text" 
                     placeholder="Search events..." 
-                    className="pl-10 pr-4 py-2 w-full" 
+                    className="pl-10 pr-4 py-2 w-full text-black" 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />

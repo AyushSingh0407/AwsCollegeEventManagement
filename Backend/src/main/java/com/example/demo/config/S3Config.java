@@ -10,7 +10,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class S3Config {
 
-    private final Dotenv dotenv = Dotenv.load();
+    private final Dotenv dotenv = Dotenv.configure()
+                .directory("C:\\Users\\Vedant\\Desktop\\AwsCollegeEventManagement\\AwsCollegeEventManagement\\Backend")
+                .filename(".env")
+                .load();
 
     @Bean
     public AmazonS3 amazonS3() {
