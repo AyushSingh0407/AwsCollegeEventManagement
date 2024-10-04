@@ -10,6 +10,7 @@ import com.example.demo.service.S3Service;
 import com.example.demo.service.DynamoDBService;
 import com.example.demo.service.JwtService;
 
+
 public class ClubLogoController {
     @Autowired
     private S3Service s3Service;

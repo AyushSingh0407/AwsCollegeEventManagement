@@ -18,6 +18,7 @@ public class JwtService {
 
     private String SECRET_KEY = "ayushSinghSecretKeyVelloreInstituteOfTechnologyVelloreTamilNaduIndia";
 
+    // Extract email from token
     public String extractEmail(String token) {
         Claims claims = Jwts.parser()
                 .setSigningKey(SECRET_KEY)
@@ -26,10 +27,17 @@ public class JwtService {
         return claims.getSubject();
     }
 
-    // Generate Token
+    // Generate token with only userEmail
     public String generateToken(String userEmail) {
         Map<String, Object> claims = new HashMap<>();
         return createToken(claims, userEmail);
+    }
+
+    // Generate token for Club
+    public String generateToken(String clubEmail, String clubName) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("clubName", clubName);
+        return createToken(claims, clubEmail);
     }
 
     private String createToken(Map<String, Object> claims, String subject) {
@@ -42,14 +50,12 @@ public class JwtService {
                 .compact();
     }
 
-
     // Validate the token
     public Boolean validateToken(String token, String userEmail) {
         final String username = extractUsername(token);
         return (username.equals(userEmail) && !isTokenExpired(token) && !tokenBlacklistService.isTokenBlacklisted(token));
     }
 
-    
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
@@ -58,7 +64,7 @@ public class JwtService {
         return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
     }
 
-    private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }

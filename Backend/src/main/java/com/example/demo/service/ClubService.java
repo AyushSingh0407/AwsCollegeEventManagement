@@ -40,4 +40,21 @@ public class ClubService {
 
         return passwordEncoder.matches(rawPassword, club.getClubPassword());
     }
+
+    public String getClubNameByEmail(String clubEmail) {
+        Club club = clubRepository.findByClubEmail(clubEmail);
+        if (club != null) {
+            return club.getClubName();
+        } else {
+            throw new RuntimeException("Club not found for the given email!");
+        }
+    }
+
+    public Club getDashboardDataForClub(String clubEmail) {
+        Club club = clubRepository.findByClubEmail(clubEmail);
+        if (club == null) {
+            throw new RuntimeException("Club not found for the given email!");
+        }
+        return club;
+    }
 }
