@@ -81,11 +81,14 @@ public class ClubController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse> login(@RequestBody Club clubRequest) {
         try {
-            boolean isLoggedIn = clubService.login(clubRequest.getClubEmail(), clubRequest.getClubPassword());
+            boolean isLoggedIn = clubService.login(
+                    clubRequest.getClubEmail(),
+                    clubRequest.getClubPassword()
+            );
 
             if (isLoggedIn) {
-                // Generate JWT token containing user email
-                String token = jwtService.generateToken(clubRequest.getClubEmail());
+                String clubName = clubService.getClubNameByEmail(clubRequest.getClubName());
+                String token = jwtService.generateToken(clubRequest.getClubEmail(), clubName);
                 ApiResponse response = new ApiResponse("Login successful", 200, true, "Bearer " + token);
                 return ResponseEntity.ok(response);
             } else {
@@ -99,9 +102,21 @@ public class ClubController {
     }
 
 
-    @GetMapping("/dashboard/{clubEmail}")
-    public List<Event> getEventsByClub(@PathVariable String clubEmail) {
-        return eventRepository.findByClubEmail(clubEmail);
+    @GetMapping("/dashboard")
+    public ResponseEntity<ApiResponse> getDashboard(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Authorization header is missing or invalid", 401, false, null));
+        }
+
+        String token = authorizationHeader.substring(7);
+        String clubEmail = jwtService.extractUsername(token);
+
+        try {
+            Club dashboardData = clubService.getDashboardDataForClub(clubEmail);
+            return ResponseEntity.ok(new ApiResponse("Dashboard data retrieved successfully", 200, true, dashboardData));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage(), 500, false, null));
+        }
     }
 
 

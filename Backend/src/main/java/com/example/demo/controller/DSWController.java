@@ -85,7 +85,7 @@ public class DSWController {
             );
 
             if (isLoggedIn) {
-                // Generate JWT token containing user email and roles
+                // Generate JWT token containing user email
                 String token = jwtService.generateToken(dswRequest.getDswCollegeEmail());
                 ApiResponse response = new ApiResponse("Login successful", 200, true, "Bearer " + token);
                 return ResponseEntity.ok(response);
