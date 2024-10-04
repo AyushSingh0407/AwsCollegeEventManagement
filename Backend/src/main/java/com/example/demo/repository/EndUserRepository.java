@@ -23,19 +23,4 @@ public class EndUserRepository {
         return dynamoDBMapper.load(EndUser.class, endUserEmail);
     }
 
-    public String delete(String endUserId){
-        EndUser endUser = dynamoDBMapper.load(EndUser.class, endUserId);
-        dynamoDBMapper.delete(endUser);
-        return "EndUser Deleted";
-    }
-
-    public String update(String endUserId, EndUser endUser){
-        dynamoDBMapper.save(endUser,
-                new DynamoDBSaveExpression()
-                        .withExpectedEntry("endUserId",
-                                new ExpectedAttributeValue(
-                                        new AttributeValue().withS(endUserId)
-                                )));
-        return endUserId;
-    }
 }

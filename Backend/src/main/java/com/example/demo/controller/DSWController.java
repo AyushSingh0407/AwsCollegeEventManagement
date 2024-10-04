@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.model.*;
 import com.example.demo.repository.DSWRepository;
+import com.example.demo.repository.EventRepository;
 import com.example.demo.service.DSWService;
 import com.example.demo.service.EventService;
 import com.example.demo.service.JwtService;
@@ -22,6 +23,9 @@ public class DSWController {
     private EventService eventService;
 
     @Autowired
+    private EventRepository eventRepository;
+
+    @Autowired
     private DSWService dswService;
 
     @Autowired
@@ -32,13 +36,6 @@ public class DSWController {
 
     @Autowired
     TokenBlacklistService tokenBlacklistService;
-
-
-    @GetMapping("/events")
-    public List<Event> getAllEvents() {
-        return eventService.getAllEvents();
-    }
-
 
     @PostMapping("/signout")
     public ResponseEntity<String> signout(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
@@ -103,6 +100,28 @@ public class DSWController {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(pendingEvents);
         }
         return ResponseEntity.ok(pendingEvents);
+    }
+
+    @PostMapping("/pendingevent")
+    public ResponseEntity<String> approveEvent(@RequestBody Event eventRequest) {
+        try {
+            Event event = eventRepository.findEventByEventId(eventRequest.getEventId());
+
+            if (event == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Event not found.");
+            }
+
+            if ("approved".equals(event.getApproved())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Event is already approved.");
+            }
+
+            event.setApproved("approved");
+            eventRepository.save(event); 
+
+            return ResponseEntity.ok("Event approved successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error approving event: " + e.getMessage());
+        }
     }
 
     @GetMapping("/approvedevent")

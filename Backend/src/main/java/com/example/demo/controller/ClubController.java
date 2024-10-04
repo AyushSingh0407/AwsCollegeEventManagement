@@ -2,11 +2,8 @@ package com.example.demo.controller;
 
 import com.example.demo.model.ApiResponse;
 import com.example.demo.model.Club;
-import com.example.demo.model.EndUser;
-import com.example.demo.model.Event;
 import com.example.demo.repository.ClubRepository;
-import com.example.demo.repository.EndUserRepository;
-import com.example.demo.repository.EventRepository; // Assuming you have a repository for Event
+import com.example.demo.repository.EventRepository;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.example.demo.service.ClubService;
 import com.example.demo.service.JwtService;
@@ -118,6 +115,7 @@ public class ClubController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage(), 500, false, null));
         }
     }
+
 
 
 
