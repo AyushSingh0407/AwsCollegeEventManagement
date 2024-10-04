@@ -8,11 +8,12 @@ import com.example.demo.model.Event;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public class EventRepository {
-
     @Autowired
     private DynamoDBMapper dynamoDBMapper;
 
@@ -20,12 +21,24 @@ public class EventRepository {
         return dynamoDBMapper.scan(Event.class, new DynamoDBScanExpression());
     }
 
-    public List<Event> findByClubEmail(String clubEmail) {
-        DynamoDBQueryExpression<Event> queryExpression = new DynamoDBQueryExpression<Event>()
-                .withHashKeyValues(new Event(clubEmail))
-                .withFilterExpression("clubEmail = :clubEmail")
-                .addExpressionAttributeValuesEntry(":clubEmail", new AttributeValue().withS(clubEmail));
+    public Event findEventByEventId(String eventId) {
+        return dynamoDBMapper.load(Event.class, eventId);
+    }
 
-        return dynamoDBMapper.query(Event.class, queryExpression);
+    // Fetch all events for a specific clubEmail
+    public List<Event> findByClubEmail(String clubEmail) {
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        expressionAttributeValues.put(":clubEmail", new AttributeValue().withS(clubEmail));
+
+        DynamoDBScanExpression scanExpression = new DynamoDBScanExpression()
+                .withFilterExpression("clubEmail = :clubEmail")
+                .withExpressionAttributeValues(expressionAttributeValues);
+
+        return dynamoDBMapper.scan(Event.class, scanExpression);
+    }
+
+    public Event save(Event event) {
+        dynamoDBMapper.save(event);
+        return event;
     }
 }
