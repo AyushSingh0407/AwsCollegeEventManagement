@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class DynamoDbConfiguration {
 
-    private final Dotenv dotenv = Dotenv.load(); // Load the .env file
+//     private final Dotenv dotenv = Dotenv.load(); // Load the .env file
 
     @Bean
     public DynamoDBMapper dynamoDBMapper(){
@@ -25,15 +25,15 @@ public class DynamoDbConfiguration {
                 .standard()
                 .withEndpointConfiguration(
                         new AwsClientBuilder.EndpointConfiguration(
-                                dotenv.get("AWS_DYNAMODB_ENDPOINT"),
-                                dotenv.get("AWS_REGION")
+                                "http://dynamodb.ap-south-1.amazonaws.com",
+                                "ap-south-1"
                         )
                 )
                 .withCredentials(
                         new AWSStaticCredentialsProvider(
                                 new BasicAWSCredentials(
-                                        dotenv.get("AWS_ACCESS_KEY_ID"),
-                                        dotenv.get("AWS_SECRET_ACCESS_KEY")
+                                        "AKIAUZPNLERTYLZ6WKXR",
+                                        "A13r5VElLWAzcY2F2PMlNKrmvvUTIv+Q5Cz565/0"
                                 )
                         )
                 )
