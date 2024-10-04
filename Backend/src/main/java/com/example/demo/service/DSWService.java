@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.model.Club;
 import com.example.demo.model.DSW;
 import com.example.demo.model.EndUser;
 import com.example.demo.repository.DSWRepository;
@@ -39,5 +40,13 @@ public class DSWService {
         }
 
         return passwordEncoder.matches(rawPassword, existingUser.getDswPassword());
+    }
+
+    public DSW getDashboardDataForDSW(String dswCollegeEmail) {
+        DSW dsw = dswRepository.findByDswCollegeEmail(dswCollegeEmail);
+        if (dsw == null) {
+            throw new RuntimeException("DSW not found for the given email!");
+        }
+        return dsw;
     }
 }

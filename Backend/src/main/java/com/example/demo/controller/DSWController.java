@@ -1,9 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.ApiResponse;
-import com.example.demo.model.DSW;
-import com.example.demo.model.EndUser;
-import com.example.demo.model.Event;
+import com.example.demo.model.*;
 import com.example.demo.repository.DSWRepository;
 import com.example.demo.service.DSWService;
 import com.example.demo.service.EventService;
@@ -112,6 +109,23 @@ public class DSWController {
     public ResponseEntity<List<Event>> getApprovedEvents() {
         List<Event> approvedEvents = eventService.getApprovedEvents();
         return ResponseEntity.ok(approvedEvents);
+    }
+
+    @GetMapping("/dashboard")
+    public ResponseEntity<ApiResponse> getDashboard(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse("Authorization header is missing or invalid", 401, false, null));
+        }
+
+        String token = authorizationHeader.substring(7);
+        String dswCollegeEmail = jwtService.extractUsername(token);
+
+        try {
+            DSW dashboardData = dswService.getDashboardDataForDSW(dswCollegeEmail);
+            return ResponseEntity.ok(new ApiResponse("Dashboard data retrieved successfully", 200, true, dashboardData));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage(), 500, false, null));
+        }
     }
 
 
