@@ -108,5 +108,11 @@ public class DSWController {
         return ResponseEntity.ok(pendingEvents);
     }
 
+    @GetMapping("/approvedevent")
+    public ResponseEntity<List<Event>> getApprovedEvents() {
+        List<Event> approvedEvents = eventService.getApprovedEvents();
+        return ResponseEntity.ok(approvedEvents);
+    }
+
 
 }

@@ -50,6 +50,17 @@ public class EventRepository {
         return dynamoDBMapper.scan(Event.class, scanExpression);
     }
 
+    public List<Event> findApprovedEvents() {
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        expressionAttributeValues.put(":approved", new AttributeValue().withS("approved"));
+
+        DynamoDBScanExpression scanExpression = new DynamoDBScanExpression()
+                .withFilterExpression("approved = :approved")
+                .withExpressionAttributeValues(expressionAttributeValues);
+
+        return dynamoDBMapper.scan(Event.class, scanExpression);
+    }
+
     public Event save(Event event) {
         dynamoDBMapper.save(event);
         return event;

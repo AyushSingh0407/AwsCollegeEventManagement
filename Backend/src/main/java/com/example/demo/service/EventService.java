@@ -68,4 +68,8 @@ public class EventService {
         return eventRepository.findPendingApprovalEvents();
     }
 
+    public List<Event> getApprovedEvents() {
+        return eventRepository.findApprovedEvents();
+    }
+
 }
