@@ -18,6 +18,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Bell, Search, User, LogOut, AlertTriangle, Check, X, Eye, Calendar as CalendarIcon } from "lucide-react"
 import { format, isSameDay } from "date-fns"
 import { useNavigate } from "react-router-dom"
+import { error } from "console"
 
 // /<a href="https://ibb.co/MSMvj6H"><img src="https://i.ibb.co/YQpCKZS/Arduino-Instagram-post.png" alt="Arduino-Instagram-post" border="0"></a>
 interface LoginState {
@@ -30,19 +31,27 @@ interface Props {
   setLogin: React.Dispatch<React.SetStateAction<LoginState>>;
 }
 
+interface Event {
+  id: string;
+  title: string;
+  startDate: string;
+  startTime: string;
+  endDate: string;
+  endTime: string;
+  venue: string;
+  organizer: string;
+  capacity: number;
+  description: string;
+  poster: string;
+}
+
+
 export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
   const navigate = useNavigate()
 
-  const [approvedEvents, setApprovedEvents] = useState([
-    { id: 1, title: "Tech Hackathon", startDate: "2023-06-15", startTime: "09:00", endDate: "2023-06-16", endTime: "09:00", venue: "CS Building", organizer: "CS Department", registrations: 75, capacity: 100, description: "A 24-hour coding competition for students." },
-    { id: 2, title: "Career Fair", startDate: "2023-06-20", startTime: "10:00", endDate: "2023-06-20", endTime: "16:00", venue: "Main Hall", organizer: "Career Services", registrations: 150, capacity: 200, description: "Annual job fair with top employers." },
-    { id: 3, title: "Alumni Meetup", startDate: "2023-06-25", startTime: "18:00", endDate: "2023-06-25", endTime: "22:00", venue: "Student Center", organizer: "Alumni Association", registrations: 100, capacity: 150, description: "Networking event for alumni and current students." },
-  ])
+  const [approvedEvents, setApprovedEvents] = useState<Event[]>([])
 
-  const [pendingEvents, setPendingEvents] = useState([
-    { id: 4, title: "Art Exhibition", startDate: "2023-07-01", startTime: "14:00", endDate: "2023-07-03", endTime: "18:00", venue: "Art Gallery", organizer: "Fine Arts Club", capacity: 200, description: "Annual art showcase featuring student artwork.", poster: "https://i.ibb.co/YQpCKZS/Arduino-Instagram-post.png?height=200&width=300" },
-    { id: 5, title: "Science Symposium", startDate: "2023-07-05", startTime: "10:00", endDate: "2023-07-05", endTime: "17:00", venue: "Lecture Hall A", organizer: "Science Society", capacity: 150, description: "A day of scientific presentations and discussions.", poster: "https://i.ibb.co/YQpCKZS/Arduino-Instagram-post.png?height=200&width=300" },
-  ])
+  const [pendingEvents, setPendingEvents] = useState<Event[]>([])
 
   const [notifications, setNotifications] = useState([
     { id: 1, message: "New event request: 'Art Exhibition'", time: "2 hours ago" },
@@ -57,8 +66,8 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
   const [showProfileDialog, setShowProfileDialog] = useState(false)
   const [profileDetails, setProfileDetails] = useState({
-    name: "Admin User",
-    email: "admin@college.edu",
+    name: "DSW Vellore",
+    email: "dsw@vit.ac.in",
   })
   const [approvedSearchTerm, setApprovedSearchTerm] = useState("")
   const [pendingSearchTerm, setPendingSearchTerm] = useState("")
@@ -67,11 +76,95 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
 
   useEffect(() => {
     if (loginState.isLogin) {
-      fetchData()
-    } else {
-      navigate("/")
+      navigate("/admin")
     }
-  }, [showProfileDialog])
+  }, [loginState.isLogin])
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    fetchPendingEvents()
+    fetchApprovedEvents()
+  }, [])
+
+  const fetchPendingEvents = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/dsw/pendingevent", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message)
+      }
+
+      const pending = await response.json()
+
+      console.log(pending)
+
+      const newPendingEvents = pending.map((element) => ({
+        id: element.eventId,
+        title: element.eventName,
+        startDate: element.eventStartDate,
+        startTime: element.eventStartTime,
+        endDate: element.eventEndDate,
+        endTime: element.eventEndTime,
+        venue: element.venue,
+        organizer: element.clubEmail.split("@")[0],
+        capacity: element.capacity,
+        description: element.description,
+        poster: element.posterUrl,
+      }));
+  
+      setPendingEvents(newPendingEvents);
+    } catch (error) {
+      console.log("Error message: " + error)
+    }
+  }
+
+  const fetchApprovedEvents = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/dsw/approvedevent", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message)
+      }
+
+      const approved = await response.json()
+
+      console.log(approved)
+
+      const newApprovedEvents = approved.map((element) => ({
+        id: element.eventId,
+        title: element.eventName,
+        startDate: element.eventStartDate,
+        startTime: element.eventStartTime,
+        endDate: element.eventEndDate,
+        endTime: element.endEventTime,
+        venue: element.venue,
+        organizer: element.clubEmail.split("@")[0],
+        capacity: element.capacity,
+        description: element.description,
+        poster: element.posterUrl,
+      }));
+  
+      setApprovedEvents(newApprovedEvents);
+      
+    } catch (error) {
+      console.log("Error message: " + error)
+    }
+  }
 
   const fetchData = async () => {
     try {
@@ -88,10 +181,18 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
       }
 
       const userInfo = await response.json();
-      setProfileDetails({
-        name: userInfo.name,
-        email: userInfo.email,
-      });
+      console.log("Complete userInfo object:", userInfo);
+      console.log(userInfo?.dswCollegeEmail)
+
+      const newUser = {
+        name: userInfo.data.dswCollegeEmail?.split("@")[0],
+        email: userInfo.data.dswCollegeEmail
+      }
+
+      setProfileDetails((prevUser) => newUser);
+
+      console.log(profileDetails)
+
     } catch (error) {
       console.error("Error fetching user data:", error);
     }
@@ -160,13 +261,25 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
     }
   }
 
-  const handleApproveEvent = (event: any) => {
-    setPendingEvents(pendingEvents.filter(e => e.id !== event.id))
-    setApprovedEvents([...approvedEvents, { ...event, registrations: 0 }])
-    setNotifications([
-      { id: Date.now(), message: `Event '${event.title}' has been approved`, time: "Just now" },
-      ...notifications
-    ])
+  const handleApproveEvent = async (event: any) => {
+    try {
+      const response = await fetch("http://localhost:8080/dsw/pendingevent", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(event)
+      })
+
+      if (!response.ok) {
+        const errorObj = await response.text()
+        throw new Error(errorObj)
+      }
+
+      fetchApprovedEvents()
+    } catch (err) {
+      console.log("Error message: " + err)
+    }
   }
 
   const handleDenyEvent = (event: any) => {
@@ -228,7 +341,7 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src="/avatars/01.png" alt="@admin" />
-                    <AvatarFallback>AD</AvatarFallback>
+                    <AvatarFallback>{profileDetails?.name ? profileDetails.name[0] : 'U'}</AvatarFallback>
                   </Avatar>
                 </Button>
               </PopoverTrigger>
@@ -237,7 +350,7 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
                   <div className="flex items-center gap-4">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src="/avatars/01.png" alt="@admin" />
-                      <AvatarFallback>AD</AvatarFallback>
+                      <AvatarFallback>{profileDetails?.name ? profileDetails.name[0] : 'U'}</AvatarFallback>
                     </Avatar>
                     <div>
                       <p className="text-sm font-medium">{profileDetails.name}</p>
