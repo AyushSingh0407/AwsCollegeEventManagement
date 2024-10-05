@@ -19,6 +19,7 @@ import { Bell, Search, User, LogOut, AlertTriangle, Check, X, Eye, Calendar as C
 import { format, isSameDay } from "date-fns"
 import { useNavigate } from "react-router-dom"
 import { error } from "console"
+import { register } from "module"
 
 // /<a href="https://ibb.co/MSMvj6H"><img src="https://i.ibb.co/YQpCKZS/Arduino-Instagram-post.png" alt="Arduino-Instagram-post" border="0"></a>
 interface LoginState {
@@ -41,6 +42,7 @@ interface Event {
   venue: string;
   organizer: string;
   capacity: number;
+  registration: number;
   description: string;
   poster: string;
 }
@@ -75,14 +77,24 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
   const [filteredPendingEvents, setFilteredPendingEvents] = useState(pendingEvents)
 
   useEffect(() => {
-    if (loginState.isLogin) {
-      navigate("/admin")
-    }
-  }, [loginState.isLogin])
+    const savedToken = localStorage.getItem("token");
+    const savedIsLogin = localStorage.getItem("isLogin");
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+    console.log(savedToken + " " + savedIsLogin)
+
+    if (savedToken && savedIsLogin === "true") {
+      setLogin({
+        isLogin: true,
+        token: savedToken
+      })
+
+      fetchData(savedToken)
+    } else {
+      navigate("/admin/login")
+    }
+
+    console.log(loginState)
+  }, [])
 
   useEffect(() => {
     fetchPendingEvents()
@@ -99,15 +111,15 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
       })
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message)
+        // const errorData = await response.json();
+        throw new Error("Approved wala error")
       }
 
       const pending = await response.json()
 
       console.log(pending)
 
-      const newPendingEvents = pending.map((element) => ({
+      const newPendingEvents = pending.map((element: any) => ({
         id: element.eventId,
         title: element.eventName,
         startDate: element.eventStartDate,
@@ -117,13 +129,14 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
         venue: element.venue,
         organizer: element.clubEmail.split("@")[0],
         capacity: element.capacity,
-        description: element.description,
+        register: element.registration,
+        description: element.eventDescription,
         poster: element.posterUrl,
       }));
   
       setPendingEvents(newPendingEvents);
     } catch (error) {
-      console.log("Error message: " + error)
+      console.log("Error message pending: " + error)
     }
   }
 
@@ -136,43 +149,45 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
         }
       })
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message)
+      if (!response.ok || !(response.status !== 204)) {
+        // const errorData = await response.json();
+        throw new Error("Node Data")
       }
 
       const approved = await response.json()
 
       console.log(approved)
 
-      const newApprovedEvents = approved.map((element) => ({
+      const newApprovedEvents = approved.map((element: any) => ({
         id: element.eventId,
         title: element.eventName,
         startDate: element.eventStartDate,
         startTime: element.eventStartTime,
         endDate: element.eventEndDate,
-        endTime: element.endEventTime,
+        endTime: element.eventEndTime,
         venue: element.venue,
         organizer: element.clubEmail.split("@")[0],
         capacity: element.capacity,
-        description: element.description,
+        registration: element.registration,
+        description: element.eventDescription,
         poster: element.posterUrl,
       }));
   
-      setApprovedEvents(newApprovedEvents);
+      console.log(newApprovedEvents)
+      setApprovedEvents(newApprovedEvents)
       
     } catch (error) {
       console.log("Error message: " + error)
     }
   }
 
-  const fetchData = async () => {
+  const fetchData = async (token: string) => {
     try {
       const response = await fetch("http://localhost:8080/dsw/dashboard", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": loginState.token
+          "Authorization": token
         }
       });
 
@@ -189,7 +204,7 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
         email: userInfo.data.dswCollegeEmail
       }
 
-      setProfileDetails((prevUser) => newUser);
+      setProfileDetails(newUser);
 
       console.log(profileDetails)
 
@@ -234,6 +249,9 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
         console.log(loginState)
         navigate("/")
 
+        localStorage.removeItem("token");
+        localStorage.removeItem("isLogin");
+
         console.log("Maine token delete ker diya")
         setLogin({ isLogin: false, token: "" })
       }
@@ -243,10 +261,31 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
 
   }
 
-  const handleCancelEvent = (event: any) => {
-    setSelectedEvent(event)
-    setShowCancelDialog(true)
-  }
+  const handleCancelEvent = async (event: any) => {
+    const wantDelete = confirm("Do you really want remove this event ?")
+    
+      if (wantDelete) {
+        try {
+          const response = await fetch("http://localhost:8080/dsw/pendingevent/deny", {
+            method: "POST",
+            body: event.id
+          })
+
+          if (!response.ok) {
+            throw new Error()
+          }
+
+          fetchApprovedEvents()
+          fetchPendingEvents()
+        } catch (error) {
+          alert("Something went wrong. Try deleting again.")
+        }
+        setSelectedEvent(event)
+        setShowCancelDialog(true)
+      } else {
+        return
+      }
+    }
 
   const confirmCancelEvent = () => {
     if (cancelConfirmation.toLowerCase() === "cancel") {
@@ -262,13 +301,14 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
   }
 
   const handleApproveEvent = async (event: any) => {
+    console.log(event.id)
     try {
       const response = await fetch("http://localhost:8080/dsw/pendingevent", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(event)
+        body: event.id
       })
 
       if (!response.ok) {
@@ -277,6 +317,9 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
       }
 
       fetchApprovedEvents()
+      fetchPendingEvents()
+      setPendingEvents(pendingEvents.filter(e => e.id !== event.id))
+
     } catch (err) {
       console.log("Error message: " + err)
     }
@@ -380,8 +423,8 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
       <main className="flex-1 container mx-auto px-4 py-8">
         <Tabs defaultValue="approved" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="approved">Approved Events</TabsTrigger>
-            <TabsTrigger value="pending">Pending Events</TabsTrigger>
+            <TabsTrigger onClick={fetchApprovedEvents} value="approved">Approved Events</TabsTrigger>
+            <TabsTrigger onClick={fetchPendingEvents} value="pending">Pending Events</TabsTrigger>
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
           </TabsList>
           <TabsContent value="approved" className="space-y-4">
@@ -423,7 +466,7 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
                         <TableCell>{`${event.endDate} ${event.endTime}`}</TableCell>
                         <TableCell>{event.venue}</TableCell>
                         <TableCell>{event.organizer}</TableCell>
-                        <TableCell>{`${event.registrations}/${event.capacity}`}</TableCell>
+                        <TableCell>{`${event.registration}/${event.capacity}`}</TableCell>
                         <TableCell>
                           <Button variant="ghost" size="sm" onClick={() => handleViewEvent(event)}>
                             <Eye className="mr-2 h-4 w-4" />
@@ -478,7 +521,7 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
                           <Check className="mr-2 h-4 w-4" />
                           Approve
                         </Button>
-                        <Button variant="destructive" onClick={() => handleDenyEvent(event)}>
+                        <Button variant="destructive" onClick={() => handleCancelEvent(event)}>
                           <X className="mr-2 h-4 w-4" />
                           Deny
                         </Button>
@@ -518,7 +561,7 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
                           <CardContent>
                             <p><strong>Time:</strong> {event.startTime} - {event.endTime}</p>
                             <p><strong>Venue:</strong> {event.venue}</p>
-                            <p><strong>Registrations/Capacity:</strong> {event.registrations}/{event.capacity}</p>
+                            <p><strong>Registrations/Capacity:</strong> {event.registration}/{event.capacity}</p>
                           </CardContent>
                           <CardFooter>
                             <Button variant="ghost" size="sm" onClick={() => handleViewEvent(event)}>
@@ -597,7 +640,7 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
               <Label>Organizer:</Label>
               <span>{selectedEvent?.organizer}</span>
               <Label>Registrations/Capacity:</Label>
-              <span>{selectedEvent?.registrations}/{selectedEvent?.capacity}</span>
+              <span>{selectedEvent?.registration}/{selectedEvent?.capacity}</span>
             </div>
             <div>
               <Label>Description:</Label>

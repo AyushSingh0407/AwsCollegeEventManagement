@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -34,6 +34,12 @@ export default function StudentLogin({ loginState, setLogin }: Props) {
     return Object.keys(newErrors).length === 0
   }
 
+  useEffect(() => {
+    if (localStorage.getItem("isLogin")) {
+      navigate("/user")
+    }
+  })
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (validateForm()) {
@@ -53,12 +59,15 @@ export default function StudentLogin({ loginState, setLogin }: Props) {
       const result = await response.json()
       console.log(result)
       console.log(result.success)
-      // console.log(props.isLogin)
       if (result.success) {
         setLogin(prevState => ({
           isLogin: result.success,
           token: result.data,
         }))
+
+        localStorage.setItem("isLogin", result.success)
+        localStorage.setItem("token", result.data)
+
         navigate("/user");
       } else {
         alert(result.message)

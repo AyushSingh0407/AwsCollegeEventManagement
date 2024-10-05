@@ -12,14 +12,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useNavigate } from "react-router-dom"
 // import img from "next/image"
 
-const allEvents = [
-  { id: 1, title: "Tech Hackathon", description: "A 24-hour coding challenge for tech enthusiasts", startDate: "2023-06-15", startTime: "09:00", endDate: "2023-06-16", endTime: "09:00", location: "Computer Science Building", attendees: 120, capacity: 150, clubId: 1, poster: "/placeholder.svg?height=150&width=150" },
-  { id: 2, title: "Art Exhibition", description: "Showcase of student artworks from various mediums", startDate: "2023-06-18", startTime: "10:00", endDate: "2023-06-18", endTime: "18:00", location: "Student Center", attendees: 80, capacity: 100, clubId: 2, poster: "/placeholder.svg?height=150&width=150" },
-  { id: 3, title: "Career Fair", description: "Connect with potential employers from various industries", startDate: "2023-06-20", startTime: "09:00", endDate: "2023-06-20", endTime: "17:00", location: "Main Hall", attendees: 200, capacity: 200, clubId: null, poster: "/placeholder.svg?height=150&width=150" },
-  { id: 4, title: "Music Festival", description: "A day-long celebration of music featuring student bands", startDate: "2023-06-25", startTime: "12:00", endDate: "2023-06-25", endTime: "22:00", location: "Auditorium", attendees: 300, capacity: 350, clubId: null, poster: "/placeholder.svg?height=150&width=150" },
-  { id: 5, title: "Science Symposium", description: "Presentations on cutting-edge research by students and faculty", startDate: "2023-06-30", startTime: "10:00", endDate: "2023-06-30", endTime: "16:00", location: "Science Complex", attendees: 150, capacity: 200, clubId: 3, poster: "/placeholder.svg?height=150&width=150" },
-]
-
 const registeredEvents = [
   { id: 1, title: "Tech Hackathon", description: "A 24-hour coding challenge for tech enthusiasts", startDate: "2023-06-15", startTime: "09:00", endDate: "2023-06-16", endTime: "09:00", location: "Computer Science Building", attendees: 120, capacity: 150, clubId: 1, poster: "/placeholder.svg?height=150&width=150" },
   { id: 3, title: "Career Fair", description: "Connect with potential employers from various industries", startDate: "2023-06-20", startTime: "09:00", endDate: "2023-06-20", endTime: "17:00", location: "Main Hall", attendees: 200, capacity: 200, clubId: null, poster: "/placeholder.svg?height=150&width=150" },
@@ -41,65 +33,105 @@ interface Props {
   setLogin: React.Dispatch<React.SetStateAction<LoginState>>;
 }
 
+interface Event {
+  id: string;
+  title: string;
+  startDate: string;
+  startTime: string;
+  endDate: string;
+  endTime: string;
+  venue: string;
+  organizer: string;
+  capacity: number;
+  registration: number;
+  description: string;
+  poster: string;
+}
+
 export default function UserPage({ loginState, setLogin }: Props) {
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState("home")
-  const [filteredEvents, setFilteredEvents] = useState(allEvents)
   const [clubSearchTerm, setClubSearchTerm] = useState("")
   const [clubType, setClubType] = useState("all")
   const [filteredClubs, setFilteredClubs] = useState(clubs)
-  const [selectedClubEvents, setSelectedClubEvents] = useState([])
   const [showProfileDialog, setShowProfileDialog] = useState(false)
   const navigate = useNavigate()
   const [showEventDetailsDialog, setShowEventDetailsDialog] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [showDeregisterDialog, setShowDeregisterDialog] = useState(false)
+  const [approvedEvents, setApprovedEvents] = useState<Event[]>([])
+  const [filteredEvents, setFilteredEvents] = useState(approvedEvents)
+  const [selectedClubEvents, setSelectedClubEvents] = useState(approvedEvents)
+  // const [registeredEvents, setRegisteredEvents] = useState<Event[]>([])
 
   const [profileDetails, setProfileDetails] = useState({
-    name: "Divyanshu Bharadwaj",
-    email: "Dibu@gmail.com",
-    password: "********"
+    name: "",
+    email: "",
   })
 
-  useEffect (() => {
-    if (!loginState.isLogin) {
-      navigate("/")
+  useEffect(() => {
+    const savedIsLogin = localStorage.getItem("isLogin")
+    const savedToken = localStorage.getItem("token")
+
+    if (savedToken && savedIsLogin === "true") {
+      setLogin({
+        isLogin: true,
+        token: savedToken
+      })
+
+      fetchUserData(savedToken)
+    } else {
+      navigate("/admin/login")
     }
-  }, [showProfileDialog])
+  }, [])
 
-    // useEffect(() => {
-    //   const fetchUserData = async () => {
-    //     try {
-    //       const response = await fetch("http://localhost:8080/enduser/dashboard", {
-    //         method: "GET",
-    //         headers: {
-    //           "Content-Type": "application/json",
-    //           "Authorization": loginState.token
-    //         }
-    //       });
+  const fetchUserData = async (token: string) => {
+    try {
+      const response = await fetch("http://localhost:8080/enduser/dashboard", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": token
+        }
+      });
 
-    //       if (!response.ok) {
-    //         throw new Error("Failed to fetch user data");
-    //       }
+      if (!response.ok) {
+        throw new Error("Failed to fetch user data");
+      }
 
-    //       const userInfo = await response.json();
-    //       setProfileDetails({
-    //         name: userInfo.name,
-    //         email: userInfo.email,
-    //         password: userInfo.password
-    //       });
-    //     } catch (error) {
-    //       console.error("Error fetching user data:", error);
-    //     }
-    //   }
+      const userInfo = await response.json();
+      console.log(userInfo)
+      const newApprovedEvents = userInfo.approvedEvents.map((element: any) => ({
+        id: element.eventId,
+        title: element.eventName,
+        startDate: element.eventStartDate,
+        startTime: element.eventStartTime,
+        endDate: element.eventEndDate,
+        endTime: element.eventEndTime,
+        venue: element.venue,
+        organizer: element.clubEmail.split("@")[0],
+        capacity: element.capacity,
+        registration: element.registration,
+        description: element.eventDescription,
+        poster: element.posterUrl,
+      }))
 
-    //   fetchUserData();
-    // }, [showProfileDialog])
+      setApprovedEvents(newApprovedEvents)
+      setProfileDetails({
+        name: userInfo.username,
+        email: userInfo.email,
+      })
+
+      setSelectedClubEvents(newApprovedEvents)
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  }
 
   useEffect(() => {
-    const filtered = allEvents.filter(event =>
+    const filtered = approvedEvents.filter(event =>
       event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.venue.toLowerCase().includes(searchTerm.toLowerCase()) ||
       event.description.toLowerCase().includes(searchTerm.toLowerCase())
     )
     setFilteredEvents(filtered)
@@ -120,7 +152,7 @@ export default function UserPage({ loginState, setLogin }: Props) {
   }
 
   const handleClubEvents = (clubId: number) => {
-    const clubEvents = allEvents.filter(event => event.clubId === clubId)
+    const clubEvents = approvedEvents.filter(event => event.clubId === clubId)
     setSelectedClubEvents(clubEvents)
     setActiveTab("events")
   }
@@ -180,6 +212,10 @@ export default function UserPage({ loginState, setLogin }: Props) {
         })
         const data = await response.text()
         console.log(data)
+
+        localStorage.removeItem("isLogin")
+        localStorage.removeItem("token")
+
         console.log(loginState)
         navigate("/")
 
@@ -192,11 +228,33 @@ export default function UserPage({ loginState, setLogin }: Props) {
 
   }
 
-  const getAbbr = () => {
-    return profileDetails.name || "Data nahi aaya abhi tak"
+  const fetchRegisteredEvents = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/enduser/registeredevent", {
+        method: "POST",
+        headers: {
+          "Authorization": loginState.token
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error("No registered events.")
+      }
+
+      const fetchedRegisteredEvent = await response.json()
+
+      console.log(fetchedRegisteredEvent)
+
+
+
+      
+
+    } catch (error) {
+      alert(error)
+    }
   }
 
-  const EventCard = ({ event, isRegistered = false }) => (
+  const EventCard = ({ event }) => (
     <Card key={event.id} className="flex flex-col">
       <CardHeader>
         <div className="flex justify-between items-start">
@@ -218,24 +276,19 @@ export default function UserPage({ loginState, setLogin }: Props) {
         </div>
         <div className="flex items-center mb-2">
           <MapPinIcon className="mr-2 h-4 w-4" />
-          <span className="text-sm">{event.location}</span>
+          <span className="text-sm">{event.venue}</span>
         </div>
         <div className="flex items-center">
           <UsersIcon className="mr-2 h-4 w-4" />
-          <span className="text-sm">{event.attendees} / {event.capacity} attendees</span>
+          <span className="text-sm">{event.registration} / {event.capacity} attendees</span>
         </div>
       </CardContent>
       <CardFooter>
-        {isRegistered ? (
-          <>
-            <Button variant="outline" className="w-1/2 mr-2" onClick={() => handleViewEventDetails(event)}>View</Button>
-            <Button variant="destructive" className="w-1/2" onClick={() => handleDeregister(event)}>De-register</Button>
-          </>
-        ) : (
-          <Button className="w-full" disabled={event.attendees >= event.capacity}>
-            {event.attendees >= event.capacity ? "Event Full" : "Register"}
+        (
+          <Button className="w-full" disabled={event.registration >= event.capacity}>
+            {event.registration >= event.capacity ? "Event Full" : "Register"}
           </Button>
-        )}
+        )
       </CardFooter>
     </Card>
   )
@@ -250,7 +303,7 @@ export default function UserPage({ loginState, setLogin }: Props) {
             <ul className="flex space-x-4">
               <li><Button variant="link" onClick={() => setActiveTab("home")}>Home</Button></li>
               <li><Button variant="link" onClick={() => setActiveTab("events")}>Events</Button></li>
-              <li><Button variant="link" onClick={() => setActiveTab("clubs")}>Clubs</Button></li>
+              {/* <li><Button variant="link" onClick={() => setActiveTab("clubs")}>Clubs</Button></li> */}
             </ul>
           </nav>
           <Popover>
@@ -304,7 +357,7 @@ export default function UserPage({ loginState, setLogin }: Props) {
                   <Input
                     type="text"
                     placeholder="Search events..."
-                    className="pl-10 pr-4 py-2 w-full"
+                    className="pl-10 pr-4 py-2 w-full text-black"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -320,7 +373,7 @@ export default function UserPage({ loginState, setLogin }: Props) {
             <div className="container mx-auto px-4">
               <h3 className="text-2xl font-bold mb-8">Upcoming Events</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {allEvents.slice(0, 3).map((event) => (
+                {approvedEvents.slice(0, 3).map((event) => (
                   <EventCard key={event.id} event={event} />
                 ))}
               </div>

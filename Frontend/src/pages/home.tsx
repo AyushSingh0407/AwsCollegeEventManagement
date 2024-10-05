@@ -9,11 +9,7 @@ import { Link, useNavigate } from "react-router-dom"
 
 
 const allEvents = [
-    { id: 1, title: "Tech Hackathon", description: "A 24-hour coding challenge for tech enthusiasts", startDate: "2023-06-15", startTime: "09:00", endDate: "2023-06-16", endTime: "09:00", location: "Computer Science Building", attendees: 120, capacity: 150, clubId: 1, poster: "/placeholder.svg?height=150&width=150" },
-    { id: 2, title: "Art Exhibition", description: "Showcase of student artworks from various mediums", startDate: "2023-06-18", startTime: "10:00", endDate: "2023-06-18", endTime: "18:00", location: "Student Center", attendees: 80, capacity: 100, clubId: 2, poster: "/placeholder.svg?height=150&width=150" },
-    { id: 3, title: "Career Fair", description: "Connect with potential employers from various industries", startDate: "2023-06-20", startTime: "09:00", endDate: "2023-06-20", endTime: "17:00", location: "Main Hall", attendees: 200, capacity: 200, clubId: null, poster: "/placeholder.svg?height=150&width=150" },
-    { id: 4, title: "Music Festival", description: "A day-long celebration of music featuring student bands", startDate: "2023-06-25", startTime: "12:00", endDate: "2023-06-25", endTime: "22:00", location: "Auditorium", attendees: 300, capacity: 350, clubId: null, poster: "/placeholder.svg?height=150&width=150" },
-    { id: 5, title: "Science Symposium", description: "Presentations on cutting-edge research by students and faculty", startDate: "2023-06-30", startTime: "10:00", endDate: "2023-06-30", endTime: "16:00", location: "Science Complex", attendees: 150, capacity: 200, clubId: 3, poster: "/placeholder.svg?height=150&width=150" },
+    
 ]
 
 const clubs = [
@@ -35,33 +31,40 @@ interface Props {
   setLogin: React.Dispatch<React.SetStateAction<LoginState>>;
 }
 
+interface Event {
+  id: string;
+  title: string;
+  startDate: string;
+  startTime: string;
+  endDate: string;
+  endTime: string;
+  venue: string;
+  organizer: string;
+  capacity: number;
+  registration: number;
+  description: string;
+  poster: string;
+}
 
 export default function Homepage({ loginState, setLogin }: Props) {
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState("home")
-  const [filteredEvents, setFilteredEvents] = useState(allEvents)
   const [clubSearchTerm, setClubSearchTerm] = useState("")
   const [clubType, setClubType] = useState("all")
   const [filteredClubs, setFilteredClubs] = useState(clubs)
   const [selectedClubEvents, setSelectedClubEvents] = useState([])
   const navigate = useNavigate()
+  const [approvedEvents, setApprovedEvents] = useState<Event[]>([])
+  const [filteredEvents, setFilteredEvents] = useState(approvedEvents)
 
   useEffect(() => {
-    if (loginState.isLogin) {
-      fetchData()
-    } else {
-      navigate("/")
-    }
+    fetchApprovedEvents()
   }, [])
 
-  const fetchData = () => {
-
-  }
-
   useEffect(() => {
-    const filtered = allEvents.filter(event =>
+    const filtered = approvedEvents.filter(event =>
       event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.location.toLowerCase().includes(searchTerm.toLowerCase())
+      event.venue.toLowerCase().includes(searchTerm.toLowerCase())
     )
     setFilteredEvents(filtered)
   }, [searchTerm])
@@ -75,13 +78,54 @@ export default function Homepage({ loginState, setLogin }: Props) {
     setFilteredClubs(filtered)
   }, [clubSearchTerm, clubType])
 
+  const fetchApprovedEvents = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/dsw/approvedevent", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (!response.ok || !(response.status !== 204)) {
+        // const errorData = await response.json();
+        throw new Error("Node Data")
+      }
+
+      const approved = await response.json()
+
+      console.log(approved)
+
+      const newApprovedEvents = approved.map((element) => ({
+        id: element.eventId,
+        title: element.eventName,
+        startDate: element.eventStartDate,
+        startTime: element.eventStartTime,
+        endDate: element.eventEndDate,
+        endTime: element.eventEndTime,
+        venue: element.venue,
+        organizer: element.clubEmail.split("@")[0],
+        capacity: element.capacity,
+        registration: element.registration,
+        description: element.eventDescription,
+        poster: element.posterUrl,
+      }));
+  
+      console.log(newApprovedEvents)
+      setApprovedEvents(newApprovedEvents)
+      
+    } catch (error) {
+      console.log("Error message: " + error)
+    }
+  }
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     setActiveTab("events")
   }
 
   const handleClubEvents = (clubId: number) => {
-    const clubEvents = allEvents.filter(event => event.clubId === clubId)
+    const clubEvents = approvedEvents.filter(event => event.clubId === clubId)
     setSelectedClubEvents(clubEvents)
     setActiveTab("events")
   }
@@ -132,13 +176,27 @@ export default function Homepage({ loginState, setLogin }: Props) {
 
   }
 
+  const handleClubClick = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/enduser/clubevent", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(approvedEvents)
+      })
+    } catch (error) {
+      console.log("No club present")
+    }
+  }
+ 
   const EventCard = ({event, isRegistered = false }) => (
     <Card key={event.id} className="flex flex-col">
       <CardHeader>
         <div className="flex justify-between items-start">
           <div>
             <CardTitle>{event.title}</CardTitle>
-            <CardDescription>Organized by {getClubName(event.clubId)}</CardDescription>
+            <CardDescription>Organized by {event.organizer}</CardDescription>
           </div>
           <img src={event.poster} alt={`${event.title} poster`} width={80} height={80} className="rounded-lg" />
         </div>
@@ -154,24 +212,23 @@ export default function Homepage({ loginState, setLogin }: Props) {
         </div>
         <div className="flex items-center mb-2">
           <MapPinIcon className="mr-2 h-4 w-4" />
-          <span className="text-sm">{event.location}</span>
+          <span className="text-sm">{event.venue}</span>
         </div>
         <div className="flex items-center">
           <UsersIcon className="mr-2 h-4 w-4" />
-          <span className="text-sm">{event.attendees} / {event.capacity} attendees</span>
+          <span className="text-sm">{event.registration} / {event.capacity} attendees</span>
         </div>
       </CardContent>
-      <CardFooter>
-        {isRegistered ? (
-          <>
-            <Button variant="outline" className="w-1/2 mr-2" onClick={() => handleViewEventDetails(event)}>View</Button>
-            <Button variant="destructive" className="w-1/2" onClick={() => handleDeregister(event)}>De-register</Button>
-          </>
-        ) : (
-          <Button className="w-full" disabled={event.attendees >= event.capacity}>
+      <CardFooter>(
+          <Button onClick={() => {
+            if (!loginState.isLogin) {
+              navigate("/enduser/login")
+            }
+
+          }} className="w-full" disabled={event.attendees >= event.capacity}>
             {event.attendees >= event.capacity ? "Event Full" : "Register"}
           </Button>
-        )}
+        )
       </CardFooter>
     </Card>
   )
@@ -186,11 +243,11 @@ export default function Homepage({ loginState, setLogin }: Props) {
             <ul className="flex space-x-4">
               <li><Button variant="link" onClick={() => setActiveTab("home")}>Home</Button></li>
               <li><Button variant="link" onClick={() => setActiveTab("events")}>Events</Button></li>
-              <li><Button variant="link" onClick={() => setActiveTab("clubs")}>Clubs</Button></li>
+              {/* <li><Button variant="link" onClick={() => {setActiveTab("clubs"); handleClubClick()}}>Clubs</Button></li> */}
             </ul>
           </nav>
           <Button onClick={handleSignOut}>
-            <Link to={loginState.isLogin ? "/" : "/enduser/login"}>{loginState.isLogin ? "Sign out" : "sign in"}</Link>
+            <Link to="/enduser/login">Sign in</Link>
           </Button>
         </div>
       </header>
@@ -223,8 +280,8 @@ export default function Homepage({ loginState, setLogin }: Props) {
             <div className="container mx-auto px-4">
               <h3 className="text-2xl font-bold mb-8">Upcoming Events</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {allEvents.slice(0, 3).map((event) => (
-                    <EventCard key={event.id} event={event} />
+                {approvedEvents.slice(0, 3).map((approvedEvents) => (
+                    <EventCard key={approvedEvents.id} event={approvedEvents} />
                 ))}
               </div>
               <div className="mt-8 text-center">
@@ -250,7 +307,7 @@ export default function Homepage({ loginState, setLogin }: Props) {
                   <h5 className="text-lg font-semibold mb-4">Quick Links</h5>
                   <ul className="space-y-2">
                     <li><Link to="#" className="hover:underline">Contact</Link></li>
-                    <li><Link to="/club/login">Club Sign in</Link></li>
+                    <li><Link to="/club/login" className="hover:underline">Club Sign in</Link></li>
                     <li><Link to="/admin/login" className="hover:underline">Admin Sign in</Link></li>
                   </ul>
                 </div>
@@ -296,7 +353,7 @@ export default function Homepage({ loginState, setLogin }: Props) {
           </section>
         </TabsContent>
 
-        <TabsContent value="clubs">
+        {/* <TabsContent value="clubs">
           <section className="py-16">
             <div className="container mx-auto px-4">
               <h3 className="text-2xl font-bold mb-8">Campus Clubs</h3>
@@ -337,7 +394,7 @@ export default function Homepage({ loginState, setLogin }: Props) {
               </div>
             </div>
           </section>
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
     </div>
   )
