@@ -27,21 +27,7 @@ public class EventService {
         Event existingEvent = eventRepository.findEventByEventId(eventId);
 
         if (existingEvent != null) {
-            // Update the event details
-            existingEvent.setEventName(eventName);
-            existingEvent.setEventDescription(eventDescription);
-            existingEvent.setEventStartDate(eventStartDate);
-            existingEvent.setEventStartTime(eventStartTime);
-            existingEvent.setEventEndDate(eventEndDate);
-            existingEvent.setEventEndTime(eventEndTime);
-            existingEvent.setVenue(venue);
-            existingEvent.setCapacity(capacity);
-            existingEvent.setPosterUrl(posterUrl);
-            existingEvent.setClubEmail(clubEmail);
-            existingEvent.setApproved(approved);
-
-
-            return eventRepository.save(existingEvent);
+            return null;
         } else {
             Event newEvent = new Event();
             newEvent.setEventId(eventId);

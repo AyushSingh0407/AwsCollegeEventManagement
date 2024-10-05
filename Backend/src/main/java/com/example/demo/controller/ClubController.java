@@ -132,8 +132,7 @@ public class ClubController {
             @RequestParam("venue") String venue,
             @RequestParam("capacity") int capacity,
             @RequestParam("posterImg") MultipartFile posterImg,
-            @RequestParam("approved") String approved){
-
+            @RequestParam("approved") String approved) {
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -144,13 +143,20 @@ public class ClubController {
         String clubEmail = jwtService.extractUsername(token);
 
         try {
-
             String posterUrl = s3Service.uploadFile(posterImg);
 
             int registration = 0;
 
-            Event event = eventService.entry(eventId, eventName, eventDescription, eventStartDate,
-                    eventStartTime, eventEndDate, eventEndTime, venue, capacity, posterUrl, clubEmail, approved, registration);
+            Event event = eventService.entry(
+                    eventId, eventName, eventDescription, eventStartDate,
+                    eventStartTime, eventEndDate, eventEndTime, venue,
+                    capacity, posterUrl, clubEmail, approved, registration
+            );
+
+            if (event == null) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(new ApiResponse("Event with same eventID already exists!!", 409, false, null));
+            }
 
             return ResponseEntity.ok(new ApiResponse("Event created successfully", 200, true, event));
         } catch (Exception e) {
@@ -158,4 +164,5 @@ public class ClubController {
                     .body(new ApiResponse("Error creating event: " + e.getMessage(), 500, false, null));
         }
     }
+
 }
