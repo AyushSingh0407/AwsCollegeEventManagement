@@ -19,6 +19,10 @@ public class EventService {
     @Autowired
     private S3Service s3Service;
 
+    public List<Event> getEventsByClubEmail(String clubEmail) {
+        return eventRepository.findByClubEmail(clubEmail);
+    }
+
     public Event entry(String eventId, String eventName, String eventDescription,
                        String eventStartDate, String eventStartTime, String eventEndDate,
                        String eventEndTime, String venue, int capacity,

@@ -16,10 +16,17 @@ public class EventRepository {
     @Autowired
     private DynamoDBMapper dynamoDBMapper;
 
-    public List<Event> findAllEvents() {
+    public List<Event> findByClubEmail(String clubEmail) {
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        expressionAttributeValues.put(":clubEmail", new AttributeValue().withS(clubEmail));
 
-        return dynamoDBMapper.scan(Event.class, new DynamoDBScanExpression());
+        DynamoDBScanExpression scanExpression = new DynamoDBScanExpression()
+                .withFilterExpression("clubEmail = :clubEmail")
+                .withExpressionAttributeValues(expressionAttributeValues);
+
+        return dynamoDBMapper.scan(Event.class, scanExpression);
     }
+
 
     public Event findEventByEventId(String eventId) {
 

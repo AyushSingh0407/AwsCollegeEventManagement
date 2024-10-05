@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/club")
@@ -118,6 +120,29 @@ public class ClubController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage(), 500, false, null));
         }
     }
+
+    @GetMapping("/events")
+    public ResponseEntity<List<Event>> getClubEvents(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        String token = authorizationHeader.substring(7);
+        String clubEmail = jwtService.extractUsername(token);
+
+        try {
+            List<Event> clubEvents = eventService.getEventsByClubEmail(clubEmail);
+
+            if (clubEvents.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+
+            return ResponseEntity.ok(clubEvents);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
 
     @PostMapping("/event/create")
     public ResponseEntity<ApiResponse> createEvent(
