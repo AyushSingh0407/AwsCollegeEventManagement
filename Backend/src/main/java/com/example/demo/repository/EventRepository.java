@@ -52,6 +52,18 @@ public class EventRepository {
         dynamoDBMapper.delete(event);
     }
 
+    public List<Event> findRegisteredEvent(String endUserEmail) {
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        expressionAttributeValues.put(":endUserEmail", new AttributeValue().withS(endUserEmail));
+
+        DynamoDBScanExpression scanExpression = new DynamoDBScanExpression()
+                .withFilterExpression("contains(registeredUser, :endUserEmail)")
+                .withExpressionAttributeValues(expressionAttributeValues);
+
+        return dynamoDBMapper.scan(Event.class, scanExpression);
+    }
+
+
 
     public Event save(Event event) {
         dynamoDBMapper.save(event);

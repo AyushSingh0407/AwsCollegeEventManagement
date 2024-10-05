@@ -128,6 +128,27 @@ public class EndUserController {
         return ResponseEntity.ok(approvedEvents);
     }
 
+    @GetMapping("/registeredevent")
+    public ResponseEntity<List<Event>> getRegisteredEvents(@RequestHeader("Authorization") String token) {
+        try {
+            token = token.substring(7);
+
+            String userEmail = jwtService.extractUsername(token);
+
+            EndUser user = endUserRepository.findByEndUserEmail(userEmail);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            }
+
+            List<Event> registeredEvents = eventService.getRegisteredEvent(user.getEndUserEmail());
+
+            return ResponseEntity.ok(registeredEvents);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
 
 
 }

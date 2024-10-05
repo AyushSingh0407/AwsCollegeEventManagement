@@ -70,4 +70,6 @@ public class EventService {
         return eventRepository.findApprovedEvents();
     }
 
+    public List<Event> getRegisteredEvent(String endUserEmail){return eventRepository.findRegisteredEvent(endUserEmail);}
+
 }
