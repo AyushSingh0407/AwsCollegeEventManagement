@@ -36,4 +36,7 @@ public class Club {
     @DynamoDBAttribute(attributeName = "events")
     private List<Event> events;
 
+    @DynamoDBAttribute(attributeName = "registeredUser")
+    private List<EndUser> registeredUser;
+
 }
