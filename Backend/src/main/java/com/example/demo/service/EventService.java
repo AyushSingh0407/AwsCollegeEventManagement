@@ -22,7 +22,7 @@ public class EventService {
     public Event entry(String eventId, String eventName, String eventDescription,
                        String eventStartDate, String eventStartTime, String eventEndDate,
                        String eventEndTime, String venue, int capacity,
-                       String posterUrl, String clubEmail, String approved) throws Exception {
+                       String posterUrl, String clubEmail, String approved, int registration) throws Exception {
 
         Event existingEvent = eventRepository.findEventByEventId(eventId);
 
@@ -40,6 +40,7 @@ public class EventService {
             existingEvent.setClubEmail(clubEmail);
             existingEvent.setApproved(approved);
 
+
             return eventRepository.save(existingEvent);
         } else {
             Event newEvent = new Event();
@@ -55,6 +56,7 @@ public class EventService {
             newEvent.setPosterUrl(posterUrl);
             newEvent.setClubEmail(clubEmail);
             newEvent.setApproved(approved);
+            newEvent.setRegistration(0);
 
             return eventRepository.save(newEvent);
         }

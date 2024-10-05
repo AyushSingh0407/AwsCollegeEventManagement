@@ -48,6 +48,11 @@ public class EventRepository {
         return dynamoDBMapper.scan(Event.class, scanExpression);
     }
 
+    public void deleteEvent(Event event) {
+        dynamoDBMapper.delete(event);
+    }
+
+
     public Event save(Event event) {
         dynamoDBMapper.save(event);
         return event;

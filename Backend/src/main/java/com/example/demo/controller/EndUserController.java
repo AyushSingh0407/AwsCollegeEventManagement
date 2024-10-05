@@ -122,6 +122,12 @@ public class EndUserController {
         }
     }
 
+    @GetMapping("/approvedevent")
+    public ResponseEntity<List<Event>> getApprovedEvents() {
+        List<Event> approvedEvents = eventService.getApprovedEvents();
+        return ResponseEntity.ok(approvedEvents);
+    }
+
 
 
 }

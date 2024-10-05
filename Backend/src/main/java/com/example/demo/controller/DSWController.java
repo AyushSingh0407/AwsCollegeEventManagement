@@ -105,27 +105,40 @@ public class DSWController {
     @PostMapping("/pendingevent")
     public ResponseEntity<String> approveEvent(@RequestBody String eventId) {
         try {
-            System.out.println(eventId);
-            // Fetch the event by eventId
             Event event = eventRepository.findEventByEventId(eventId);
 
-            // Check if the event exists
             if (event == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Event not found.");
             }
 
-            // Check if the event is already approved
             if ("approved".equals(event.getApproved())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Event is already approved.");
             }
 
-            // Update the approved status to "approved"
             event.setApproved("approved");
-            eventRepository.save(event); // Save the updated event
+            eventRepository.save(event);
 
             return ResponseEntity.ok("Event approved successfully.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error approving event: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/pendingevent/deny")
+    public ResponseEntity<String> denyEvent(@RequestBody String eventId) {
+        try {
+            System.out.println(eventId);
+            Event event = eventRepository.findEventByEventId(eventId);
+
+            if (event == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Event not found.");
+            }
+
+            eventRepository.deleteEvent(event);
+
+            return ResponseEntity.ok("Event denied and deleted successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error denying event: " + e.getMessage());
         }
     }
 

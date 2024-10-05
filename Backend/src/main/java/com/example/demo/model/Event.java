@@ -40,6 +40,9 @@ public class Event {
     @DynamoDBAttribute(attributeName = "capacity")
     private int capacity;
 
+    @DynamoDBAttribute(attributeName = "registration")
+    private int registration;
+
     @DynamoDBAttribute(attributeName = "posterUrl")
     private String posterUrl;
 
