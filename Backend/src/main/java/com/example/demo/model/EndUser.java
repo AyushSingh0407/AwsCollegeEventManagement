@@ -24,6 +24,9 @@ public class EndUser {
     @DynamoDBAttribute(attributeName = "endUserPassword")
     private String endUserPassword;
 
+//    @DynamoDBAttribute(attributeName = "registeredEvent")
+//    private List<Event> registeredEvent;
+
     @DynamoDBAttribute(attributeName = "registeredEvent")
-    private List<Event> registeredEvent;
+    private List<String> registeredEvent;
 }
