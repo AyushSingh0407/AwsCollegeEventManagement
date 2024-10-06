@@ -3,10 +3,12 @@ package com.example.demo.repository;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.example.demo.model.EndUser;
 import com.example.demo.model.Event;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,14 +62,31 @@ public class EventRepository {
     }
 
     public List<Event> findRegisteredEvent(String endUserEmail) {
-        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":endUserEmail", new AttributeValue().withS(endUserEmail));
+//        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+//        expressionAttributeValues.put(":endUserEmail", new AttributeValue().withS(endUserEmail));
+//
+//        DynamoDBScanExpression scanExpression = new DynamoDBScanExpression()
+//                .withFilterExpression("contains(registeredUser, :endUserEmail)")
+//                .withExpressionAttributeValues(expressionAttributeValues);
+//
+//        return dynamoDBMapper.scan(Event.class, scanExpression);
 
-        DynamoDBScanExpression scanExpression = new DynamoDBScanExpression()
-                .withFilterExpression("contains(registeredUser, :endUserEmail)")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        // change due to storing event id in user registered events list
+        EndUser endUser = dynamoDBMapper.load(EndUser.class, endUserEmail);
 
-        return dynamoDBMapper.scan(Event.class, scanExpression);
+        List<String> registeredEventIds = endUser.getRegisteredEvent();
+
+        List<Event> registeredEvents = new ArrayList<>();
+        if (registeredEventIds != null && !registeredEventIds.isEmpty()) {
+            for (String eventId : registeredEventIds) {
+                Event event = dynamoDBMapper.load(Event.class, eventId);
+                if (event != null) {
+                    registeredEvents.add(event);
+                }
+            }
+        }
+
+        return registeredEvents;
     }
 
 
