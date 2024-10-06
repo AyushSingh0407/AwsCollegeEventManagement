@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -35,6 +35,12 @@ export default function ClubLogin({ loginState, setLogin }: Props) {
     return Object.keys(newErrors).length === 0
   }
 
+  useEffect(() => {
+    if (localStorage.getItem("isLogin")) {
+      navigate("/clubs")
+    }
+  }, [])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (validateForm()) {
@@ -43,7 +49,7 @@ export default function ClubLogin({ loginState, setLogin }: Props) {
         clubEmail: email,
         clubPassword: password
       }
-      
+
       const response = await fetch("http://localhost:8080/club/login", {
         method: "POST",
         headers: {
@@ -55,24 +61,41 @@ export default function ClubLogin({ loginState, setLogin }: Props) {
       const result = await response.json()
       console.log(result)
       console.log(result.success)
-      // console.log(props.isLogin)
       if (result.success) {
-        setLogin(prevState => ({
+        const loginData = {
           isLogin: result.success,
-          token: result.data,
-        }))
+          token: result.data
+        };
+        setLogin(loginData);
+
+        localStorage.setItem("token", result.data);
+        localStorage.setItem("isLogin", "true");
+
         navigate("/clubs");
       } else {
         alert("Login not successfull")
+        return
       }
       console.log("Form submitted", { name, email, password })
-      // Reset form after successful submission
+
       setName("")
       setEmail("")
       setPassword("")
       setErrors({})
     }
   }
+
+  useEffect(() => {
+    const savedToken = localStorage.getItem("token");
+    const savedIsLogin = localStorage.getItem("isLogin");
+
+    if (savedToken && savedIsLogin === "true") {
+      setLogin({
+        isLogin: true,
+        token: savedToken
+      });
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">

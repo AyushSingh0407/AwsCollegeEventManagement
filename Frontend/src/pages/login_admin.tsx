@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -35,6 +35,12 @@ export default function AdminLogin({ loginState, setLogin }: Props) {
     return Object.keys(newErrors).length === 0
   }
 
+  useEffect(() => {
+    if (localStorage.getItem("isLogin")) {
+      navigate("/admin")
+    }
+  })
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (validateForm()) {
@@ -61,6 +67,9 @@ export default function AdminLogin({ loginState, setLogin }: Props) {
           isLogin: result.success,
           token: result.data,
         }))
+
+        localStorage.setItem("isLogin", result.success)
+        localStorage.setItem("token", result.data)
         navigate("/admin");
       } else {
         alert("Login not successfull")

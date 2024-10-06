@@ -30,16 +30,27 @@ interface Props {
   setLogin: React.Dispatch<React.SetStateAction<LoginState>>;
 }
 
+interface Event {
+  id: string;
+  title: string;
+  startDate: string;
+  startTime: string;
+  endDate: string;
+  endTime: string;
+  venue: string;
+  organizer: string;
+  capacity: number;
+  registration: number;
+  description: string;
+  poster: string;
+  approval: string;
+}
+
 export default function ClubDashboard({ loginState, setLogin }: Props) {
   const navigate = useNavigate()
   // const [startDate, setStartDate] = useState<Date>()
   // const [endDate, setEndDate] = useState<Date>()
-  const [allEvents, setAllEvents] = useState([
-    { id: 1, title: "Tech Hackathon", startDate: "2023-06-15", startTime: "09:00", endDate: "2023-06-16", endTime: "09:00", venue: "CS Building", capacity: 100, registrations: 75, status: "Approved", banner: "/placeholder.svg", description: "Join us for an exciting 24-hour hackathon!" },
-    { id: 2, title: "Art Exhibition", startDate: "2023-06-18", startTime: "14:00", endDate: "2023-06-18", endTime: "20:00", venue: "Student Center", capacity: 50, registrations: 30, status: "Pending", banner: "/placeholder.svg", description: "Showcase your artistic talents at our annual exhibition." },
-    { id: 3, title: "Career Fair", startDate: "2023-06-20", startTime: "10:00", endDate: "2023-06-20", endTime: "16:00", venue: "Main Hall", capacity: 200, registrations: 150, status: "Approved", banner: "/placeholder.svg", description: "Connect with top employers and explore career opportunities." },
-  ])
-  const [events, setEvents] = useState(allEvents)
+  // const [events, setEvents] = useState(allEvents)
 
   const [notifications, setNotifications] = useState([
     { id: 1, message: "Your event 'Tech Hackathon' has been approved", time: "2 hours ago" },
@@ -64,9 +75,9 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
     clubPhoneNo: "",
     clubDescription: "",
   })
+  const [events, setEvents] = useState([])
 
-  // New Event
-
+  //NEW EVENT
   const [eventId, setEventId] = useState("");
   const [eventTitle, setEventTitle] = useState("");
   const [startDate, setStartDate] = useState<Date | null>(null);
@@ -78,28 +89,42 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
   const [description, setDescription] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
 
-
   useEffect(() => {
-    fetchUserData()
-  }, [showProfileDialog]);
+    const savedToken = localStorage.getItem("token");
+    const savedIsLogin = localStorage.getItem("isLogin");
 
-  const fetchUserData = async () => {
+    if (savedToken && savedIsLogin === "true") {
+      setLogin({
+        isLogin: true,
+        token: savedToken
+      })
+
+      fetchUserData(savedToken)
+      fetchClubCreatedEvents(savedToken)
+    } else {
+      navigate("/club/login")
+    }
+  }, [])
+  
+
+  const fetchUserData = async (token: string) => {
     try {
       console.log()
       const response = await fetch("http://localhost:8080/club/dashboard", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": loginState.token
+          "Authorization": token
         }
       });
-
+      
+      console.log(response)
       if (!response.ok) {
+        console.log(response.status)
         throw new Error("Failed to fetch user data");
       }
 
       const clubInfo = await response.json();
-      // console.log(clubInfo.data)
 
       setProfileDetails({
         clubName: clubInfo.data.clubName,
@@ -109,28 +134,73 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
         clubDescription: clubInfo.data.clubDescription
       });
 
-      console.log(profileDetails)
     } catch (error) {
       console.error("Error fetching user data:", error);
     }
   }
 
+  const fetchClubCreatedEvents = async () => {
+    const token = localStorage.getItem("token")
+    try {
+      const response = await fetch("http://localhost:8080/club/events", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": token
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch club created events")
+      }
+      
+      const data = await response.json()
+      console.log(data)
+      const newEvents = data.map((element: any) => ({
+        id: element.eventId,
+        title: element.eventName,
+        startDate: element.eventStartDate,
+        startTime: element.eventStartTime,
+        endDate: element.eventEndDate,
+        endTime: element.eventEndTime,
+        venue: element.venue,
+        organizer: element.clubEmail.split("@")[0],
+        capacity: element.capacity,
+        registration: element.registration,
+        description: element.eventDescription,
+        poster: element.posterUrl,
+        approval: element.approved,
+      }));
+
+      // console.log(newEvents)
+      setEvents(newEvents)
+
+      console.log(events)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   const handleLogOut = async () => {
+    const token = localStorage.getItem("token")
     if (loginState.isLogin) {
       const sure = confirm("Do you really want to log out ?")
       if (sure) {
         console.log("Maine token delete ker diya")
-        const response = await fetch("http://localhost:8080/enduser/signout", {
+        const response = await fetch("http://localhost:8080/club/signout", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": loginState.token
+            "Authorization": token
           }
         })
         const data = await response.text()
         console.log(data)
         console.log(loginState)
         navigate("/")
+
+        localStorage.removeItem("token");
+        localStorage.removeItem("isLogin");
 
         console.log("Maine token delete ker diya")
         setLogin({ isLogin: false, token: "" })
@@ -197,17 +267,28 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
       });
   
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json()
         throw new Error(errorData.message || "Failed to submit the form");
       }
+
   
       const data = await response.json();
-      console.log("Form submitted successfully:", data);
-      // Handle success (e.g., show success message, redirect)
+
+      setEventId("");
+      setEventTitle("");
+      setStartDate(null);
+      setStartTime("");
+      setEndDate(null);
+      setEndTime("");
+      setVenue("");
+      setCapacity("");
+      setDescription("");
+      setAttachments([]);
+
+      alert("Event has been sucessfully created and waiting for approval.")
       
     } catch (error) {
-      console.error("Error submitting form:", error);
-      // Handle error (e.g., show error message to user)
+      alert(error)
     }
   };
 
@@ -365,7 +446,7 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
       <main className="flex-1 container mx-auto px-4 py-8">
         <Tabs defaultValue="events" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="events">Events</TabsTrigger>
+            <TabsTrigger onClick={fetchClubCreatedEvents} value="events">Events</TabsTrigger>
             <TabsTrigger value="new-event">New Event Request</TabsTrigger>
           </TabsList>
           <TabsContent value="events" className="space-y-4">
@@ -397,17 +478,17 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {events.map((event) => (
+                    {events.map((event: Event) => (
                       <TableRow key={event.id}>
                         <TableCell>{event.title}</TableCell>
                         <TableCell>{`${event.startDate} ${event.startTime}`}</TableCell>
                         <TableCell>{`${event.endDate} ${event.endTime}`}</TableCell>
                         <TableCell>{event.venue}</TableCell>
                         <TableCell>{event.capacity}</TableCell>
-                        <TableCell>{event.registrations}</TableCell>
+                        <TableCell>{event.registration}</TableCell>
                         <TableCell>
-                          <Badge variant={event.status === "Approved" ? "default" : "secondary"}>
-                            {event.status}
+                          <Badge variant={event.approval.toLowerCase() === "approved" ? "default" : "secondary"}>
+                            {event.approval[0].toUpperCase() + event.approval.split(event.approval[0])[1]}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -422,14 +503,14 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
                               </DialogHeader>
                               <div className="grid gap-4 py-4">
                                 <div className="grid grid-cols-2 items-center gap-4">
-                                  <img src={selectedEvent?.banner} alt={selectedEvent?.title} className="w-full h-48 object-cover rounded-md" />
+                                  <img src={selectedEvent?.poster} alt={selectedEvent?.title} className="w-full h-48 object-cover rounded-md" />
                                   <div>
                                     <p><strong>Start Date and Time:</strong> {`${selectedEvent?.startDate} ${selectedEvent?.startTime}`}</p>
                                     <p><strong>End Date and Time:</strong> {`${selectedEvent?.endDate} ${selectedEvent?.endTime}`}</p>
                                     <p><strong>Venue:</strong> {selectedEvent?.venue}</p>
                                     <p><strong>Capacity:</strong> {selectedEvent?.capacity}</p>
-                                    <p><strong>Registrations:</strong> {selectedEvent?.registrations}</p>
-                                    <p><strong>Status:</strong> {selectedEvent?.status}</p>
+                                    <p><strong>Registrations:</strong> {selectedEvent?.registration}</p>
+                                    <p><strong>Status:</strong> {event.approval[0].toUpperCase() + event.approval.split(event.approval[0])[1]}</p>
                                   </div>
                                 </div>
                                 <div>
@@ -458,7 +539,7 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="id">Event Title</Label>
+                    <Label htmlFor="id">Event ID</Label>
                     <Input
                       id="id"
                       value={eventId}
