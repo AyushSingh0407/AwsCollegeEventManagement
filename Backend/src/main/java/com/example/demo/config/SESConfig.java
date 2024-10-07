@@ -10,13 +10,9 @@ import software.amazon.awssdk.services.sesv2.SesV2Client;
 
 @Configuration
 public class SESConfig {
-
+    private final Dotenv dotenv = Dotenv.load();
     @Bean
     public SesV2Client sesV2Client() {
-        Dotenv dotenv = Dotenv.configure()
-                .directory("D:\\Program_Files\\AwsCollegeEventManagement\\Backend")
-                .filename(".env")
-                .load();
 
         AwsBasicCredentials awsCreds = AwsBasicCredentials.create(
                 dotenv.get("AWS_ACCESS_KEY_ID"),
