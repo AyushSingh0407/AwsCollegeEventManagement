@@ -2,7 +2,6 @@ package com.example.demo.controller;
 
 import com.example.demo.model.ApiResponse;
 import com.example.demo.model.Club;
-import com.example.demo.model.EndUser;
 import com.example.demo.model.Event;
 import com.example.demo.repository.ClubRepository;
 import com.example.demo.repository.EventRepository;
@@ -189,31 +188,6 @@ public class ClubController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse("Error creating event: " + e.getMessage(), 500, false, null));
         }
-    }
-
-    @PostMapping("/registeredstudentslist")
-    public ResponseEntity<List<EndUser>> registeredUsers(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @RequestBody String eventId){
-
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
-
-        Event event = eventRepository.findEventByEventId(eventId);
-
-        try{
-            if (event == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-            }
-
-            List<EndUser> registeredUsersList = event.getRegisteredUser();
-
-            return ResponseEntity.status(HttpStatus.OK).body(registeredUsersList);
-        }
-        catch (Exception e){
-            System.err.println(e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-
     }
 
 }
