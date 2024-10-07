@@ -5,13 +5,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AlertCircle, ArrowLeft } from "lucide-react"
-import { Link } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 
 export default function StudentSignup() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
+  const navigate = useNavigate();
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {}
@@ -50,6 +51,7 @@ export default function StudentSignup() {
         // Attempt to parse the response
         const responseData = await response.json();
         console.log("Signup successful:", responseData);
+        navigate("/enduser/login");
         
         // Reset form after successful submission
         setName("");
