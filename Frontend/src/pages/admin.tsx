@@ -17,7 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { Bell, Search, User, LogOut, AlertTriangle, Check, X, Eye, Calendar as CalendarIcon } from "lucide-react"
 import { format, isSameDay } from "date-fns"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { error } from "console"
 import { register } from "module"
 
@@ -55,11 +55,7 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
 
   const [pendingEvents, setPendingEvents] = useState<Event[]>([])
 
-  const [notifications, setNotifications] = useState([
-    { id: 1, message: "New event request: 'Art Exhibition'", time: "2 hours ago" },
-    { id: 2, message: "Event 'Tech Hackathon' is at full capacity", time: "5 hours ago" },
-    { id: 3, message: "10 new registrations for 'Career Fair'", time: "1 day ago" },
-  ])
+  const [notifications, setNotifications] = useState([])
 
   const [showCancelDialog, setShowCancelDialog] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState(null)
@@ -68,8 +64,8 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
   const [showProfileDialog, setShowProfileDialog] = useState(false)
   const [profileDetails, setProfileDetails] = useState({
-    name: "DSW Vellore",
-    email: "dsw@vit.ac.in",
+    name: "",
+    email: "",
   })
   const [approvedSearchTerm, setApprovedSearchTerm] = useState("")
   const [pendingSearchTerm, setPendingSearchTerm] = useState("")
@@ -112,7 +108,9 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
 
       if (!response.ok) {
         // const errorData = await response.json();
-        throw new Error("Approved wala error")
+        setPendingEvents([])
+        setFilteredPendingEvents([])
+        throw new Error("Pending wala error")
       }
 
       const pending = await response.json()
@@ -134,7 +132,9 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
         poster: element.posterUrl,
       }));
   
-      setPendingEvents(newPendingEvents);
+      setPendingEvents(newPendingEvents)
+      setFilteredPendingEvents(newPendingEvents)
+      
     } catch (error) {
       console.log("Error message pending: " + error)
     }
@@ -263,6 +263,7 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
 
   const handleCancelEvent = async (event: any) => {
     const wantDelete = confirm("Do you really want remove this event ?")
+    handleDenyEvent(event)
     
       if (wantDelete) {
         try {
@@ -272,18 +273,17 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
           })
 
           if (!response.ok) {
-            throw new Error()
+            const errorData = await response.text()
+            throw new Error(errorData)
           }
 
           fetchApprovedEvents()
           fetchPendingEvents()
         } catch (error) {
-          alert("Something went wrong. Try deleting again.")
+          alert("Something went wrong. Try deleting again." + error)
         }
         setSelectedEvent(event)
         setShowCancelDialog(true)
-      } else {
-        return
       }
     }
 
@@ -293,10 +293,6 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
       setShowCancelDialog(false)
       setCancelConfirmation("")
       setSelectedEvent(null)
-      setNotifications([
-        { id: Date.now(), message: `Event '${selectedEvent.title}' has been cancelled`, time: "Just now" },
-        ...notifications
-      ])
     }
   }
 
@@ -326,11 +322,7 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
   }
 
   const handleDenyEvent = (event: any) => {
-    setPendingEvents(pendingEvents.filter(e => e.id !== event.id))
-    setNotifications([
-      { id: Date.now(), message: `Event '${event.title}' has been denied`, time: "Just now" },
-      ...notifications
-    ])
+    setPendingEvents(filteredPendingEvents.filter(e => e.id !== event.id))
   }
 
   const handleViewEvent = (event: any) => {
@@ -358,6 +350,7 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
             <h1 className="text-2xl font-bold">CollegeAdmin</h1>
           </div>
           <div className="flex items-center space-x-4">
+            <Link to="/club/signup"><Button className="text-s text-white">Create Club</Button></Link>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -401,10 +394,10 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
                     </div>
                   </div>
                   <div className="grid gap-2">
-                    <Button variant="ghost" className="w-full justify-start" onClick={() => setShowProfileDialog(true)}>
+                    {/* <Button variant="ghost" className="w-full justify-start" onClick={() => setShowProfileDialog(true)}>
                       <User className="mr-2 h-4 w-4" />
                       Profile
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
                 <div className="mt-4 border-t pt-4">
@@ -423,8 +416,8 @@ export default function CollegeAdminDashboard({ loginState, setLogin }: Props) {
       <main className="flex-1 container mx-auto px-4 py-8">
         <Tabs defaultValue="approved" className="space-y-4">
           <TabsList>
-            <TabsTrigger onClick={fetchApprovedEvents} value="approved">Approved Events</TabsTrigger>
-            <TabsTrigger onClick={fetchPendingEvents} value="pending">Pending Events</TabsTrigger>
+            <TabsTrigger onClick={() => fetchApprovedEvents()} value="approved">Approved Events</TabsTrigger>
+            <TabsTrigger onClick={() => fetchPendingEvents()} value="pending">Pending Events</TabsTrigger>
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
           </TabsList>
           <TabsContent value="approved" className="space-y-4">

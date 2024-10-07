@@ -150,12 +150,6 @@ export default function ClubLogin({ loginState, setLogin }: Props) {
         </CardContent>
         <CardFooter className="flex flex-col">
           <Button className="w-full" onClick={handleSubmit}>Login</Button>
-          <p className="mt-4 text-sm text-center">
-            Don't have an account?{" "}
-            <Link to="/club/signup" className="text-primary hover:underline">
-              Sign up
-            </Link>
-          </p>
         </CardFooter>
       </Card>
     </div>

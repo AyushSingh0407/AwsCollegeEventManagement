@@ -63,7 +63,7 @@ export default function ClubSignup() {
         // Attempt to parse the response
         // const responseData = await response.text();
         console.log("Signup successful:", responseData);
-        navigate("/club/login")
+        navigate("/admin")
         
         // Reset form after successful submission
         setName("");
@@ -180,12 +180,6 @@ export default function ClubSignup() {
         </CardContent>
         <CardFooter className="flex flex-col">
           <Button className="w-full" onClick={handleSubmit}>Signup</Button>
-          <p className="mt-4 text-sm text-center">
-            Already have an account?{" "}
-            <Link to="/club/login" className="text-primary hover:underline">
-              Login
-            </Link>
-          </p>
         </CardFooter>
       </Card>
     </div>
