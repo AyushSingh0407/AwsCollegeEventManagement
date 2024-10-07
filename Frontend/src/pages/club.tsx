@@ -381,6 +381,8 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
     console.log(result)
     if (response.ok) {
       console.log("Logo uploaded successfully:", result)
+      const token: string = localStorage.getItem("token") as string;
+      fetchUserData(token);
       setShowLogoUploadDialog(false)
     } else {
       const errorData = await response.json();
@@ -431,8 +433,8 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
               <PopoverTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={profileDetails.image} alt={profileDetails.clubName} />
-                    <AvatarFallback>{profileDetails.clubName}</AvatarFallback>
+                    <AvatarImage src={profileDetails.image} alt={profileDetails.clubName[0]} />
+                    <AvatarFallback>{profileDetails.clubName[0]}</AvatarFallback>
                   </Avatar>
                 </Button>
               </PopoverTrigger>
@@ -814,7 +816,7 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
           </div>
           <DialogFooter>
             <Button type="button" onClick={() => setShowLogoUploadDialog(false)}>Cancel</Button>
-            <Button type="button" onClick={handleLogoUpload} disabled={!logoFile}>
+            <Button type="button" onClick={() => handleLogoUpload()} disabled={!logoFile}>
               Upload Logo
             </Button>
           </DialogFooter>
