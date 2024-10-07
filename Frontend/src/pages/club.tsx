@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Bell, Calendar as CalendarIcon, ChevronDown, FileText, LogOut, Search, User, AlertTriangle, Upload } from "lucide-react"
-import { format } from "date-fns"
+import { format, set } from "date-fns"
 import { useNavigate } from "react-router-dom"
 
 interface LoginState {
@@ -46,11 +46,13 @@ interface Event {
   approval: string;
 }
 
+interface Student {
+  name: string;
+  email: string;
+}
+
 export default function ClubDashboard({ loginState, setLogin }: Props) {
   const navigate = useNavigate()
-  // const [startDate, setStartDate] = useState<Date>()
-  // const [endDate, setEndDate] = useState<Date>()
-  // const [events, setEvents] = useState(allEvents)
 
   const [notifications, setNotifications] = useState([
     { id: 1, message: "Your event 'Tech Hackathon' has been approved", time: "2 hours ago" },
@@ -64,7 +66,7 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
   const [showProfileDialog, setShowProfileDialog] = useState(false)
   const [showRegistrationList, setShowRegistrationList] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-
+  const [registeredStudents, setRegisteredStudents] = useState<Student[]>([])
   const [showLogoUploadDialog, setShowLogoUploadDialog] = useState(false)
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
@@ -75,7 +77,8 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
     clubPhoneNo: "",
     clubDescription: "",
   })
-  const [events, setEvents] = useState([])
+  const [events, setEvents] = useState<Event[]>([])
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([])
 
   //NEW EVENT
   const [eventId, setEventId] = useState("");
@@ -100,7 +103,7 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
       })
 
       fetchUserData(savedToken)
-      fetchClubCreatedEvents(savedToken)
+      fetchClubCreatedEvents()
     } else {
       navigate("/club/login")
     }
@@ -140,18 +143,19 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
   }
 
   const fetchClubCreatedEvents = async () => {
-    const token = localStorage.getItem("token")
+    const token: string = localStorage.getItem("token") as string
     try {
       const response = await fetch("http://localhost:8080/club/events", {
         method: "GET",
         headers: {
-          "Content-Type": "application/json",
           "Authorization": token
         }
       })
 
       if (!response.ok) {
-        throw new Error("Failed to fetch club created events")
+        setEvents([])
+        setFilteredEvents([])
+        throw new Error("Failed to fetch club created events.")
       }
       
       const data = await response.json()
@@ -172,10 +176,9 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
         approval: element.approved,
       }));
 
-      // console.log(newEvents)
       setEvents(newEvents)
+      setFilteredEvents(newEvents)
 
-      console.log(events)
     } catch (error) {
       console.log(error)
     }
@@ -195,15 +198,10 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
           }
         })
         const data = await response.text()
-        console.log(data)
-        console.log(loginState)
         navigate("/")
 
         localStorage.removeItem("token");
         localStorage.removeItem("isLogin");
-
-        console.log("Maine token delete ker diya")
-        setLogin({ isLogin: false, token: "" })
       }
     } else {
       navigate("/")
@@ -218,14 +216,6 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
       setLogoPreview(URL.createObjectURL(file))
     }
   }
-
-  // const handleLogoUpload = () => {
-  //   // Here you would typically send the logo file to your server
-  //   // For this example, we'll just close the dialog and keep the preview
-  //   setShowLogoUploadDialog(false)
-  //   // You might want to update the club's logo in your state or send it to an API here
-  // }
-
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -271,9 +261,6 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
         throw new Error(errorData.message || "Failed to submit the form");
       }
 
-  
-      const data = await response.json();
-
       setEventId("");
       setEventTitle("");
       setStartDate(null);
@@ -286,30 +273,66 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
       setAttachments([]);
 
       alert("Event has been sucessfully created and waiting for approval.")
+
+      fetchClubCreatedEvents()
       
     } catch (error) {
       alert(error)
     }
   };
 
+  const registerdStudentsList = async (id: string) => {
+    setShowRegistrationList(true)
+    const token: string = localStorage.getItem("token") as string
 
-  const handleViewEvent = (event: any) => {
-    setSelectedEvent(event)
-  }
+    try {
+      const response = await fetch("http://localhost:8080/club/registeredstudentslist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain",
+          "Authorization": token,
+        },
+        body: id
+      })
 
-  const handleCancelEvent = (event: any) => {
-    setSelectedEvent(event)
-    setShowCancelDialog(true)
-  }
+      if (!response.ok) {
+        console.log("No Student found")
+      }
 
-  const confirmCancelEvent = () => {
-    if (cancelConfirmation.toLowerCase() === "cancel") {
-      setAllEvents(allEvents.filter(e => e.id !== selectedEvent.id))
-      setEvents(events.filter(e => e.id !== selectedEvent.id))
-      setShowCancelDialog(false)
-      setCancelConfirmation("")
-      setSelectedEvent(null)
+      const result = await response.json()
+      console.log(result)
+      const newApprovedEvents = result.map((element: any) => ({
+        name: element.endUserName,
+        email: element.endUserEmail
+      }))
+
+      setRegisteredStudents(newApprovedEvents)
+    } catch (error) {
+      console.log(error)
     }
+  }
+
+  useEffect(() => {
+    setRegisteredStudents([])
+  }, [showRegistrationList])
+
+    const handleViewEvent = (event: any) => {
+      setSelectedEvent(event)
+    }
+
+    const handleCancelEvent = (event: any) => {
+      setSelectedEvent(event)
+      setShowCancelDialog(true)
+    }
+
+    const confirmCancelEvent = () => {
+      if (cancelConfirmation.toLowerCase() === "cancel") {
+        setAllEvents(allEvents.filter(e => e.id !== selectedEvent.id))
+        setEvents(events.filter(e => e.id !== selectedEvent.id))
+        setShowCancelDialog(false)
+        setCancelConfirmation("")
+        setSelectedEvent(null)
+      }
   }
 
 
@@ -318,21 +341,23 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
     const query = e.target.value.toLowerCase()
     setSearchQuery(query)
     if (query === "") {
-      setEvents(allEvents)
+      setFilteredEvents(events)
     } else {
-      const filteredEvents = allEvents.filter(event =>
+      const newFilteredEvents = events.filter(event =>
         event.title.toLowerCase().includes(query) ||
         event.venue.toLowerCase().includes(query)
       )
-      setEvents(filteredEvents)
+      setFilteredEvents(newFilteredEvents)
     }
   }
 
-  const registeredStudents = [
-    { name: "John Doe", email: "john@example.com" },
-    { name: "Jane Smith", email: "jane@example.com" },
-    { name: "Alice Johnson", email: "alice@example.com" },
-  ]
+  // const registeredStudents = [
+  //   { name: "John Doe", email: "john@example.com" },
+  //   { name: "Jane Smith", email: "jane@example.com" },
+  //   { name: "Alice Johnson", email: "alice@example.com" },
+  // ]
+
+  
 
   const handleLogoUpload = async () => {
     setShowLogoUploadDialog(false)
@@ -445,8 +470,8 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 py-8">
         <Tabs defaultValue="events" className="space-y-4">
-          <TabsList>
-            <TabsTrigger onClick={fetchClubCreatedEvents} value="events">Events</TabsTrigger>
+          <TabsList onClick={() => fetchClubCreatedEvents()}>
+            <TabsTrigger value="events">Events</TabsTrigger>
             <TabsTrigger value="new-event">New Event Request</TabsTrigger>
           </TabsList>
           <TabsContent value="events" className="space-y-4">
@@ -478,7 +503,7 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {events.map((event: Event) => (
+                    {filteredEvents.map((event: Event) => (
                       <TableRow key={event.id}>
                         <TableCell>{event.title}</TableCell>
                         <TableCell>{`${event.startDate} ${event.startTime}`}</TableCell>
@@ -517,11 +542,10 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
                                   <strong>Description:</strong>
                                   <p>{selectedEvent?.description}</p>
                                 </div>
-                                <Button onClick={() => setShowRegistrationList(true)}>View Registration List</Button>
+                                <Button onClick={() => registerdStudentsList(selectedEvent?.id)}>View Registration List</Button>
                               </div>
                             </DialogContent>
                           </Dialog>
-                          <Button variant="destructive" size="sm" onClick={() => handleCancelEvent(event)}>Cancel</Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -738,6 +762,7 @@ export default function ClubDashboard({ loginState, setLogin }: Props) {
               </TableRow>
             </TableHeader>
             <TableBody>
+              {registeredStudents.length == 0 && <div className="text-green-600">No user registered for this event yet.</div>}
               {registeredStudents.map((student, index) => (
                 <TableRow key={index}>
                   <TableCell>{student.name}</TableCell>
