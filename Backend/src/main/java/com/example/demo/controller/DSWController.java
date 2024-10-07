@@ -3,15 +3,13 @@ package com.example.demo.controller;
 import com.example.demo.model.*;
 import com.example.demo.repository.DSWRepository;
 import com.example.demo.repository.EventRepository;
-import com.example.demo.service.DSWService;
-import com.example.demo.service.EventService;
-import com.example.demo.service.JwtService;
-import com.example.demo.service.TokenBlacklistService;
+import com.example.demo.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import software.amazon.awssdk.services.sesv2.model.Template;
 
 import java.util.List;
 
@@ -36,6 +34,9 @@ public class DSWController {
 
     @Autowired
     TokenBlacklistService tokenBlacklistService;
+
+    @Autowired
+    EmailTemplateService emailTemplateService;
 
     @PostMapping("/signout")
     public ResponseEntity<String> signout(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
@@ -134,6 +135,99 @@ public class DSWController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Event not found.");
             }
 
+            //Cancelling the event by DSW
+            if(event.getApproved().equals("approved")){
+
+                List<EndUser> registeredUsers = event.getRegisteredUser();
+
+                //Default email of Sender
+                String sender = "divyanshukm18@gmail.com";
+                //Email template name for users
+                String templateName = "EventCancellationTemplate";
+
+                //Sending mail to all registered users
+                for(EndUser user : registeredUsers){
+                    Template userTemplate = Template.builder()
+                            .templateName(templateName)
+                            .templateData("{\n" +
+                                    "  \"name\": \"" + user.getEndUserName() + "\",\n" +
+                                    "  \"event_name\": \""+ event.getEventName() +"\",\n" +
+                                    "  \"organiser\": \""+ event.getClubEmail().split("@")[0] +"\",\n" +
+                                    "  \"description\": \""+ event.getEventDescription() +"\",\n" +
+                                    "  \"start_date\": \""+ event.getEventStartDate() +"\",\n" +
+                                    "  \"start_time\": \""+ event.getEventStartTime() +"\",\n" +
+                                    "  \"end_date\": \""+ event.getEventEndDate() +"\",\n" +
+                                    "  \"end_time\": \""+ event.getEventEndTime() +"\",\n" +
+                                    "  \"venue\": \""+ event.getVenue() +"\",\n" +
+                                    "  \"contact_email\": \""+ event.getClubEmail() +"\"\n" +
+                                    "}")
+                            .build();
+
+                    //Sending email
+                    try{
+                        emailTemplateService.send(sender, user.getEndUserEmail(), templateName, userTemplate);
+                    }
+                    catch (Exception e){
+                        return new ResponseEntity<>("Error in sending mail: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
+                }
+
+                //Sending mail to Club
+                Template clubTemplate = Template.builder()
+                        .templateName("EventCancellationClubTemplate")
+                        .templateData("{\n" +
+                                "  \"club_name\": \""+ event.getClubEmail().split("@")[0] +"\",\n" +
+                                "  \"event_name\": \""+ event.getEventName() +"\",\n" +
+                                "  \"description\": \""+ event.getEventDescription() +"\",\n" +
+                                "  \"requested_capacity\": \""+ event.getCapacity() +"\",\n" +
+                                "  \"start_date\": \""+ event.getEventStartDate() +"\",\n" +
+                                "  \"start_time\": \""+ event.getEventStartTime() +"\",\n" +
+                                "  \"end_date\": \""+ event.getEventEndDate() +"\",\n" +
+                                "  \"end_time\": \""+ event.getEventEndTime() +"\",\n" +
+                                "  \"venue\": \""+ event.getVenue() +"\",\n" +
+                                "  \"contact_email\": \""+ sender +"\"\n" +
+                                "}")
+                        .build();
+
+                //Sending email
+                try{
+                    emailTemplateService.send(sender, event.getClubEmail(), "EventCancellationClubTemplate", clubTemplate);
+                }
+                catch (Exception e){
+                    return new ResponseEntity<>("Error in sending mail: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+            }
+            else{
+                //Default email of Sender
+                String sender = "divyanshukm18@gmail.com";
+
+                //Sending mail to Club for event denial by DSW
+                Template clubTemplate = Template.builder()
+                        .templateName("EventRejectionTemplate")
+                        .templateData("{\n" +
+                                "  \"club_name\": \""+ event.getClubEmail().split("@")[0] +"\",\n" +
+                                "  \"event_name\": \""+ event.getEventName() +"\",\n" +
+                                "  \"description\": \""+ event.getEventDescription() +"\",\n" +
+                                "  \"requested_capacity\": \""+ event.getCapacity() +"\",\n" +
+                                "  \"start_date\": \""+ event.getEventStartDate() +"\",\n" +
+                                "  \"start_time\": \""+ event.getEventStartTime() +"\",\n" +
+                                "  \"end_date\": \""+ event.getEventEndDate() +"\",\n" +
+                                "  \"end_time\": \""+ event.getEventEndTime() +"\",\n" +
+                                "  \"venue\": \""+ event.getVenue() +"\",\n" +
+                                "  \"contact_email\": \""+ sender +"\"\n" +
+                                "}")
+                        .build();
+
+                //Sending email
+                try{
+                    emailTemplateService.send(sender, event.getClubEmail(), "EventRejectionTemplate", clubTemplate);
+                }
+                catch (Exception e){
+                    return new ResponseEntity<>("Error in sending mail: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+            }
+
+
             eventRepository.deleteEvent(event);
 
             return ResponseEntity.ok("Event denied and deleted successfully.");
@@ -164,4 +258,6 @@ public class DSWController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage(), 500, false, null));
         }
     }
+
 }
+
