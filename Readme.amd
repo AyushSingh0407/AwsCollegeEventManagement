@@ -1,0 +1,53 @@
+College Event Management Frontend
+This is the frontend for the AWS College Event Management system. It is built using React, TypeScript, and Vite for fast development and modern best practices.
+
+Features
+User authentication and registration
+Browse and register for college events
+Event details and schedules
+Admin dashboard for managing events
+Responsive design for mobile and desktop
+Integration with AWS backend services
+Tech Stack
+React: UI library
+TypeScript: Typed JavaScript for scalable apps
+Vite: Fast build tool and dev server
+AWS: Backend integration (API, authentication, storage)
+Getting Started
+Prerequisites
+Node.js (v16 or newer)
+npm or yarn
+Installation
+bash
+git clone https://github.com/AyushSingh0407/AwsCollegeEventManagement.git
+cd AwsCollegeEventManagement/Frontend
+npm install
+Running Locally
+bash
+npm run dev
+The app will be available at http://localhost:5173/ (default Vite port).
+
+Building for Production
+bash
+npm run build
+Project Structure
+Code
+Frontend/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   ├── services/
+│   └── App.tsx
+├── public/
+├── README.md
+├── package.json
+└── vite.config.ts
+ESLint & Code Quality
+The project uses ESLint with recommended rules for React and TypeScript. See the config in the repo for details and customizing lint rules.
+
+Contributing
+Fork the repository
+Create your feature branch (git checkout -b feature/YourFeature)
+Commit your changes (git commit -am 'Add new feature')
+Push to the branch (git push origin feature/YourFeature)
+Open a Pull Request
